@@ -15,6 +15,7 @@ function ChatRenderer:init(args)
 
   self.prompt_lines = 1
   self.max_prompt_height = 12
+  self.min_prompt_height = 5
   self.input = Input({
     on_submit = args.on_submit,
     on_change = vim.schedule_wrap(function(lines)
@@ -67,7 +68,10 @@ function ChatRenderer:render_answer_delta(delta)
 end
 
 function ChatRenderer:get_layout_params()
-  local prompt_height = math.min(2 + self.prompt_lines, self.max_prompt_height)
+  local base_height = 2 + self.min_prompt_height -- esse 2 é o mínimo para o input (menos que 2 da erro)
+  local lines_over_min_height = math.max(0, self.prompt_lines - self.min_prompt_height)
+
+  local prompt_height = math.min(base_height + lines_over_min_height, self.max_prompt_height)
 
   local box = Layout.Box({
     Layout.Box(self.chat_window, { grow = 1 }),
@@ -76,8 +80,8 @@ function ChatRenderer:get_layout_params()
 
   local config = {
     relative = 'editor',
-    position = '50%',
-    size = { width = '60%', height = '60%' },
+    position = '100%',
+    size = { width = '30%', height = '100%' },
   }
 
   return config, box
