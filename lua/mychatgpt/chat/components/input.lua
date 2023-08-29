@@ -130,6 +130,15 @@ function Input:mount()
     self:on(event.InsertEnter, function() vim.api.nvim_feedkeys(self._.default_value, 'n', false) end, { once = true })
   end
 
+  self:maps(props)
+
+  vim.api.nvim_command('startinsert!')
+  vim.fn.sign_place(0, 'my_group', 'singleprompt_sign', self.bufnr, { lnum = 1, priority = 10 })
+end
+
+function Input:get_lines() return vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false) end
+
+function Input:maps(props)
   self:map('i', popup_options.submit, function()
     local lines = self:get_lines()
     props.on_submit(lines)
@@ -142,11 +151,6 @@ function Input:mount()
 
   self:map('n', 'q', ':q<CR>', { desc = 'Quit chat' })
   self:map('i', '<C-c>', '<ESC><CMD>q<CR>', { desc = 'Quit chat' })
-
-  vim.api.nvim_command('startinsert!')
-  vim.fn.sign_place(0, 'my_group', 'singleprompt_sign', self.bufnr, { lnum = 1, priority = 10 })
 end
-
-function Input:get_lines() return vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false) end
 
 return Input
