@@ -55,17 +55,21 @@ function Api.chat_completions(messages, callback)
       Authorization = 'Bearer ' .. Api.OPENAI_API_KEY,
       Content_Type = 'application/json',
     },
+    raw = { '--silent', '--show-error', '--no-buffer' },
     body = vim.fn.json_encode(payload),
-    stream = vim.schedule_wrap(function(_, data, _)
-      local raw_message = string.gsub(data, '^data: ', '')
-      local is_usefull_data = string.len(raw_message) > 6
+    stream = function(_, data, _)
+      vim.schedule(function()
+        local raw_message = string.gsub(data, '^data: ', '')
+        local is_usefull_data = string.len(raw_message) > 0
 
-      if raw_message == '[DONE]' then
-        on_done()
-      elseif is_usefull_data then
-        on_delta(vim.fn.json_decode(raw_message))
-      end
-    end),
+        if raw_message == '[DONE]' then
+          return on_done()
+        elseif is_usefull_data then
+          local json_response = vim.fn.json_decode(raw_message)
+          on_delta(json_response)
+        end
+      end)
+    end,
   })
 end
 
