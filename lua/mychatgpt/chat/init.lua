@@ -32,7 +32,7 @@ function Chat:add_message(args)
   table.insert(self.messages, message)
 end
 
-function Chat:send_lines_to_text_input(lines)
+function Chat:set_prompt(lines)
   table.insert(lines, '')
   self.renderer.input:set_lines(lines)
   self.renderer.input:scroll_to_bottom()
