@@ -37,11 +37,11 @@ function ChatRenderer:render_message(message)
   local hl_group = message.opts.hl_group
 
   if message.role == 'assistant' then
-    self:_set_lines(start_line - 1, -1, { '' }) -- apaga a mensagem parcial
+    self.chat_window:set_lines(start_line - 1, -1, { '' }) -- apaga a mensagem parcial
   end
 
   -- mostra a mensagem pronta
-  self:_set_lines(start_line, end_line, lines)
+  self.chat_window:set_lines(start_line, end_line, lines)
 
   -- highlight lines
   if hl_group then
@@ -53,17 +53,18 @@ end
 
 ---@param delta string[]
 function ChatRenderer:render_answer_delta(delta)
-  local buffer = self.chat_window.bufnr
-  local win = self.chat_window.winid
-
-  for _, line in ipairs(delta) do
-    local last_line = vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1]
-    local line_count = vim.api.nvim_buf_line_count(buffer)
+  for i, line in ipairs(delta) do
+    local last_line = self.chat_window:get_lines(-2, -1)[1]
+    local line_count = self.chat_window:line_count()
     local last_line_idx = line_count - 1
 
-    self:_set_lines(last_line_idx, -1, { last_line .. line })
+    self.chat_window:set_lines(last_line_idx, -1, { last_line .. line })
 
-    vim.api.nvim_win_set_cursor(win, { line_count, 0 }) -- scroll pra baixo
+    if i == #delta and i > 1 then
+      self.chat_window:set_lines(-1, -1, { '' })
+    end
+
+    self.chat_window:scroll_to_end()
   end
 end
 
@@ -88,12 +89,6 @@ function ChatRenderer:get_layout_params()
 end
 
 function ChatRenderer:update_layout() self.layout:update(self:get_layout_params()) end
-
-function ChatRenderer:_set_lines(start_idx, end_idx, lines)
-  -- vim.api.nvim_buf_set_option(self.chat_window.bufnr, 'modifiable', true)
-  vim.api.nvim_buf_set_lines(self.chat_window.bufnr, start_idx, end_idx, false, lines)
-  -- vim.api.nvim_buf_set_option(self.chat_window.bufnr, 'modifiable', false)
-end
 
 function ChatRenderer:_add_highlight(hl_group, line, col_start, col_end)
   vim.api.nvim_buf_add_highlight(self.chat_window.bufnr, -1, hl_group, line, col_start, col_end)
