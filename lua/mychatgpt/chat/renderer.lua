@@ -11,8 +11,6 @@ local ChatRenderer = classes.class()
 ---@param args ChatRendererArgs
 function ChatRenderer:init(args)
   self.chat_window = messages_widget
-  vim.api.nvim_buf_set_option(self.chat_window.bufnr, 'filetype', 'markdown')
-
   self.prompt_lines = 1
   self.max_prompt_height = 12
   self.min_prompt_height = 5
@@ -52,7 +50,13 @@ function ChatRenderer:render_message(message)
 end
 
 ---@param delta string[]
-function ChatRenderer:render_answer_delta(delta)
+function ChatRenderer:render_answer_delta(delta, state)
+  if state == "START" then
+  -- Começa uma nova linha.
+  self.chat_window:set_lines(-1, -1, { '' })
+  end
+
+
   for i, line in ipairs(delta) do
     local last_line = self.chat_window:get_lines(-2, -1)[1]
     local line_count = self.chat_window:line_count()
@@ -60,9 +64,8 @@ function ChatRenderer:render_answer_delta(delta)
 
     self.chat_window:set_lines(last_line_idx, -1, { last_line .. line })
 
-    if i == #delta and i > 1 then
-      self.chat_window:set_lines(-1, -1, { '' })
-    end
+    local should_add_blank_line = i > 1
+    if should_add_blank_line then self.chat_window:set_lines(-1, -1, { '' }) end
 
     self.chat_window:scroll_to_end()
   end

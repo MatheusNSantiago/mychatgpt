@@ -32,12 +32,6 @@ function Chat:add_message(args)
   table.insert(self.messages, message)
 end
 
-function Chat:set_prompt(lines)
-  table.insert(lines, '')
-  self.renderer.input:set_lines(lines)
-  self.renderer.input:scroll_to_bottom()
-end
-
 --- Envia as mensagens para o servidor e renderiza a resposta
 --- como a API é stateless, é necessário enviar todas as mensagens
 function Chat:send_message()
@@ -48,9 +42,16 @@ function Chat:send_message()
         role = 'assistant',
       })
     end
+
     -- Ainda não terminou de responder
-    self.renderer:render_answer_delta(answer)
+    self.renderer:render_answer_delta(answer, state)
   end)
+end
+
+function Chat:set_prompt(lines)
+  table.insert(lines, '')
+  self.renderer.input:set_lines(lines)
+  self.renderer.input:scroll_to_bottom()
 end
 
 function Chat:_get_last_line_number()

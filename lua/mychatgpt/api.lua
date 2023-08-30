@@ -24,11 +24,10 @@ function Api.chat_completions(messages, callback)
   local payload = Api._convert_messages_to_openai_format(messages)
 
   local raw_chunks = ''
-  local state = 'START'
+  local state = 'NOP'
 
   local on_done = function()
     local final_answer = utils.split_into_lines(raw_chunks)
-
     callback(final_answer, 'END')
   end
 
@@ -43,9 +42,14 @@ function Api.chat_completions(messages, callback)
       local delta = response.choices[1].delta.content
 
       raw_chunks = raw_chunks .. delta
-      state = 'CONTINUE'
-
       delta = utils.split_into_lines(delta)
+
+      if state == 'NOP' then
+        state = 'START'
+        return callback(delta, state)
+      end
+
+      state = 'CONTINUE'
       callback(delta, state)
     end
   end
