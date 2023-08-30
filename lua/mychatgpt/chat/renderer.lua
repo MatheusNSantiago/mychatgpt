@@ -36,6 +36,8 @@ function ChatRenderer:render_message(message)
 
   if message.role == 'assistant' then
     self.chat_window:set_lines(start_line - 1, -1, { '' }) -- apaga a mensagem parcial
+  else
+    self.chat_window:set_sign('chatgpt_question_sign', start_line)
   end
 
   -- mostra a mensagem pronta
@@ -44,18 +46,17 @@ function ChatRenderer:render_message(message)
   -- highlight lines
   if hl_group then
     for line_num = start_line, end_line do
-      self:_add_highlight(hl_group, line_num, 0, -1)
+      self.chat_window:highlight_line(hl_group, line_num, 0, -1)
     end
   end
 end
 
 ---@param delta string[]
 function ChatRenderer:render_answer_delta(delta, state)
-  if state == "START" then
-  -- Começa uma nova linha.
-  self.chat_window:set_lines(-1, -1, { '' })
+  if state == 'START' then
+    -- Começa uma nova linha.
+    self.chat_window:set_lines(-1, -1, { '' })
   end
-
 
   for i, line in ipairs(delta) do
     local last_line = self.chat_window:get_lines(-2, -1)[1]
@@ -92,9 +93,5 @@ function ChatRenderer:get_layout_params()
 end
 
 function ChatRenderer:update_layout() self.layout:update(self:get_layout_params()) end
-
-function ChatRenderer:_add_highlight(hl_group, line, col_start, col_end)
-  vim.api.nvim_buf_add_highlight(self.chat_window.bufnr, -1, hl_group, line, col_start, col_end)
-end
 
 return ChatRenderer

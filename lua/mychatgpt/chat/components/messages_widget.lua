@@ -33,18 +33,23 @@ function ChatWindow:get_lines(start_idx, end_idx)
   return lines
 end
 
-
-function ChatWindow:set_lines(start_idx, end_idx, lines)
-  -- vim.api.nvim_buf_set_option(self.chat_window.bufnr, 'modifiable', true)
-  vim.api.nvim_buf_set_lines(self.bufnr, start_idx, end_idx, false, lines)
-  -- vim.api.nvim_buf_set_option(self.chat_window.bufnr, 'modifiable', false)
+function ChatWindow:set_sign(sign_name, start_line)
+  vim.fn.sign_place(0, nil, sign_name, self.bufnr, { lnum = start_line + 1 })
 end
 
+function ChatWindow:set_lines(start_idx, end_idx, lines)
+  vim.api.nvim_buf_set_option(self.bufnr, 'modifiable', true)
+  vim.api.nvim_buf_set_lines(self.bufnr, start_idx, end_idx, false, lines)
+  vim.api.nvim_buf_set_option(self.bufnr, 'modifiable', false)
+end
+
+function ChatWindow:highlight_line(hl_group, line_idx, col_start, col_end)
+  vim.api.nvim_buf_add_highlight(self.bufnr, -1, hl_group, line_idx, col_start, col_end)
+end
 
 function ChatWindow:line_count()
   local line_count = vim.api.nvim_buf_line_count(self.bufnr)
   return line_count
 end
-
 
 return ChatWindow
