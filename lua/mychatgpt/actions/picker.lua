@@ -1,23 +1,23 @@
 local M = {}
 
 --- Cria um picker pro telescope
----@param keymap string
----@param title string
----@param actions_tbl {name: string, handler: function | string}
-function M.create_picker(keymap, title, actions_tbl)
-	for _, action in ipairs(actions_tbl) do
-		M.normalize_action(action)
-	end
+---@class PickerOptions
+---@field keymap string
+---@field title string
+---@field options string[]
+---@field callback function
 
+---@param opts PickerOptions
+function M.create_picker(opts)
 	local entry_maker = function(menu_item)
 		return {
 			value = menu_item,
-			ordinal = menu_item.name,
-			display = menu_item.name,
+			ordinal = menu_item,
+			display = menu_item,
 		}
 	end
 
-	vim.keymap.set({ 'n', 'x' }, keymap, function()
+	vim.keymap.set({ 'n', 'x' }, opts.keymap, function()
 		local delay_ms = 0
 
 		-- Caso estaja em modo visual, o nvim precisa de um pouco de mais tempo
@@ -33,12 +33,12 @@ function M.create_picker(keymap, title, actions_tbl)
 		vim.defer_fn(function()
 			require('telescope.pickers')
 					.new(require('telescope.themes').get_dropdown({}), {
-						prompt_title = title,
+						prompt_title = opts.title,
 						finder = require('telescope.finders').new_table({
-							results = actions_tbl,
+							results = opts.options,
 							entry_maker = entry_maker,
 						}),
-						sorter = require('telescope.sorters').get_generic_fuzzy_sorter({}),
+						sorter = require('telescope.sorters').get_generic_fuzzy_sorter(),
 						attach_mappings = function(prompt_buffer_number)
 							local actions = require('telescope.actions')
 
@@ -48,7 +48,8 @@ function M.create_picker(keymap, title, actions_tbl)
 								local selection = state.get_selected_entry()
 
 								actions.close(prompt_buffer_number) -- Closing the picker
-								selection.value.handler(isVisualMode) -- Executing the callback
+
+								opts.callback(selection.value)  -- executa o callback
 							end)
 							return true
 						end,
@@ -56,43 +57,6 @@ function M.create_picker(keymap, title, actions_tbl)
 					:find()
 		end, delay_ms)
 	end)
-end
-
---- Normaliza o handler de uma ação
---- * Se for um comando do nvim, seta o handler para executar o comando
---- * Se for um comando do terminal, seta o handler para executar o comando no toggleterm
-function M.normalize_action(action)
-	local handler = action.handler
-
-	if type(handler) == 'string' then
-		local isNvimCmd = handler:sub(1, 1) == ':' or handler:sub(1, 1) == '<'
-
-		if isNvimCmd then
-			local startsWithColon = handler:sub(1, 1) == ':'
-			local startsWithAngleBracket = handler:sub(1, 1) == '<'
-
-			-- pega só o mando principal
-			local cmd = ''
-			if startsWithColon then
-				cmd = string.match(handler, '^:(.*)<.+>$')
-			elseif startsWithAngleBracket then
-				cmd = string.match(handler, '^<[Cc][Mm][Dd]>(.*)<.+>$')
-			end
-
-			-- Seta o handler de acordo com o modo
-			action.handler = function(isVisualMode)
-				if isVisualMode then
-					vim.cmd("'<,'>" .. cmd)
-				else
-					vim.cmd(cmd)
-				end
-			end
-		else -- Não é um comando do nvim
-			-- Então é um comando do terminal (abrir no toggleterm)
-			action.handler = function() vim.cmd("TermExec cmd='" .. handler .. "'") end
-		end
-	else
-	end
 end
 
 return M.create_picker
