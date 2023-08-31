@@ -3,16 +3,16 @@ local utils = require('mychatgpt.utils')
 local M = {}
 
 M.prompts = {
-  ['Documentação'] = {
-    prompt = 'Write a {{standard}} docstring for the code below. Wrap your code in a markdown code block. {{extra}}',
+  ['Documentar'] = {
+    prompt =
+    'Write a {{standard}} docstring for the code below. Wrap your code in a markdown code block. Dont give me any explanation, just the code. {{extra}}',
     standard = {
       default = '',
       lua = 'EmmyLua',
     },
     extra = {
       default = '',
-      lua =
-      'Use 3 dashes for all the EmmyLua annotations (like ---@param param 1 string). Dont give me any explanation, just the code',
+      lua = 'Use 3 dashes for all the EmmyLua annotations (like ---@param param 1 string).',
     },
   },
 }
