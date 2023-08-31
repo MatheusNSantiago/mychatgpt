@@ -32,23 +32,15 @@ function ChatRenderer:render_message(message)
   local start_line = message.start_line
   local end_line = message.end_line
   local lines = message.lines
-  local hl_group = message.opts.hl_group
 
   if message.role == 'assistant' then
     self.chat_window:set_lines(start_line - 1, -1, { '' }) -- apaga a mensagem parcial
   else
-    self.chat_window:set_sign('chatgpt_question_sign', start_line)
+    self.chat_window:set_sign('mychatgpt_question_sign', start_line)
   end
 
   -- mostra a mensagem pronta
   self.chat_window:set_lines(start_line, end_line, lines)
-
-  -- highlight lines
-  if hl_group then
-    for line_num = start_line, end_line do
-      self.chat_window:highlight_line(hl_group, line_num, 0, -1)
-    end
-  end
 end
 
 ---@param delta string[]
