@@ -4,28 +4,26 @@ local utils = require('mychatgpt.utils')
 local Message = classes.class()
 
 ---@class MessageOptions
----@field hl_group? string
----@field filetype? string
+---@field role string 'user' | 'system' | 'assistant'
+---@field lines string[]
+---@field start_line integer O linha onde começa a mensagem em relação a source
+---@field is_hidden? boolean (default false) Se a mensagem deve ser renderizada ou não
 
---- @param role string 'user' | 'system' | 'assistant'
---- @param lines string[]
---- @param start_line integer O linha onde começa a mensagem em relação a source
---- @param opts MessageOptions
-function Message:init(role, lines, start_line, opts)
-  self.role = role
-  self.opts = opts or {}
+--- @param args MessageOptions
+function Message:init(args)
+  local lines = args.lines
+  local is_hidden = args.is_hidden == nil and false or args.is_hidden
 
-  local is_code_snippet = self.opts.filetype ~= nil
-  if is_code_snippet then
-    -- ```filetype
-    utils.add_code_block_for_filetype(lines, self.opts.filetype)
-  end
+  self.role = args.role
 
   table.insert(lines, '') -- add empty line no final (margin)
 
   self.lines = lines
-  self.start_line = start_line
-  self.end_line = start_line + #lines - 1
+
+  self.start_line = args.start_line
+  self.end_line = args.start_line + #lines - 1
+
+  if is_hidden then self.end_line = self.start_line end
 end
 
 function Message:get_text() return table.concat(self.lines, '\n') end
