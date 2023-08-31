@@ -1,28 +1,31 @@
+local actions = require('mychatgpt.actions')
+local utils = require('mychatgpt.utils')
 local create_picker = require('mychatgpt.actions.picker')
 
-create_picker('<Leader><Leader>o', 'ChatGPT', {
-  { name = 'Chat', handler = '' },
-  { name = 'Documentar', handler = '' },
-  { name = 'Explicar', handler = '' },
-  { name = 'Ver se o código ta legível e se tem que trocar algo', handler = '' },
-})
+local function reload()
+  vim.cmd('wa')
+  vim.cmd('source plugin/mychatgpt.lua')
+  for k in pairs(package.loaded) do
+    if k:match('^mychatgpt') then package.loaded[k] = nil end
+  end
+end
 
 vim.keymap.set('x', 'v', function()
-  vim.cmd('wa')
-  vim.cmd('source plugin/mychatgpt.lua')
-  for k in pairs(package.loaded) do
-    if k:match('^mychatgpt') then package.loaded[k] = nil end
-  end
-
-  require('mychatgpt').send_selection_to_chat()
+  reload()
+  require('mychatgpt').teste()
 end)
+
 vim.keymap.set('n', '<leader>v', function()
-
-  vim.cmd('wa')
-  vim.cmd('source plugin/mychatgpt.lua')
-  for k in pairs(package.loaded) do
-    if k:match('^mychatgpt') then package.loaded[k] = nil end
-  end
-
+  reload()
   require('mychatgpt').open_chat()
 end)
+
+create_picker({
+  keymap = '<leader><leader>o',
+  title = 'MyChatGPT',
+  options = vim.tbl_keys(actions.prompts),
+  callback = function(action)
+    reload()
+    actions.execute_action(action, function(prompt) require('mychatgpt').send_hidden_prompt(prompt) end)
+  end,
+})

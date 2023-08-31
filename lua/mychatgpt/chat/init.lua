@@ -18,16 +18,23 @@ end
 ---@class AddMessageArgs
 ---@field role? string (default 'user') 'user' | 'system' | 'assistant'
 ---@field lines string[]
----@field opts? MessageOptions
+---@field is_hidden? boolean (default false)
 
 ---@param args AddMessageArgs
 function Chat:add_message(args)
   local start_line = self:_get_last_line_number() + 1
   local role = args.role or 'user'
   local lines = args.lines
+  local is_hidden = args.is_hidden == nil and false or args.is_hidden
 
-  local message = Message.new(role, lines, start_line, args.opts)
-  self.renderer:render_message(message)
+  local message = Message.new({
+    lines = lines,
+    role = role,
+    start_line = start_line,
+    is_hidden = is_hidden,
+  })
+
+  if not is_hidden then self.renderer:render_message(message) end
 
   table.insert(self.messages, message)
 end

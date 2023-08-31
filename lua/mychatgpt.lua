@@ -1,26 +1,24 @@
 local api = require('mychatgpt.api')
-local utils = require('mychatgpt.utils')
 local Chat = require('mychatgpt.chat')
 
 local M = {}
 
 M.setup = function()
-  --
+  vim.api.nvim_set_hl(0, 'MyChatGPT_Question', { fg = '#b4befe', italic = true, bold = false, default = true })
+  vim.cmd('sign define mychatgpt_question_sign text=' .. '' .. ' texthl=MyCHATGPT_Question')
+
   api.setup()
 end
 
-M.open_chat = function()
-  M.chat = Chat:new()
-end
+M.open_chat = function() M.chat = Chat:new() end
 
-function M.send_selection_to_chat()
-  local selection_lines = utils.get_selection_lines()
-  local buf_filetype = utils.get_buf_filetype()
-
+function M.send_hidden_prompt(prompt)
   local chat = Chat:new()
-
-  utils.add_code_block_for_filetype(selection_lines, buf_filetype)
-  chat:set_prompt(selection_lines)
+  chat:add_message({
+    lines = prompt,
+    is_hidden = true,
+  })
+  chat:send_message()
 end
 
 return M

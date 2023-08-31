@@ -1,5 +1,4 @@
 local classes = require('mychatgpt.shared.classes')
-local utils = require('mychatgpt.utils')
 
 local Message = classes.class()
 
@@ -16,14 +15,16 @@ function Message:init(args)
 
   self.role = args.role
 
-  table.insert(lines, '') -- add empty line no final (margin)
+  table.insert(lines, '') -- adiciona uma linha no final (margin)
 
   self.lines = lines
-
   self.start_line = args.start_line
-  self.end_line = args.start_line + #lines - 1
+  self.end_line = self.start_line + #lines - 1
 
-  if is_hidden then self.end_line = self.start_line end
+  if is_hidden then
+    self.start_line = 0
+    self.end_line = 0
+  end
 end
 
 function Message:get_text() return table.concat(self.lines, '\n') end
