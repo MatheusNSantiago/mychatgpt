@@ -11,7 +11,7 @@ return function(opts)
     border = {
       highlight = 'FloatBorder',
       style = 'rounded',
-      text = { opts.title },
+      text = { top = opts.title },
     },
     win_options = {
       wrap = true,
