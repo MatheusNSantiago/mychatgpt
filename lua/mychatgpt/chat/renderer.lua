@@ -1,7 +1,7 @@
 local classes = require('mychatgpt.shared.classes')
 local Layout = require('nui.layout')
 local Input = require('mychatgpt.chat.components.input')
-local messages_widget = require('mychatgpt.chat.components.messages_widget')
+local MessagesWidget = require('mychatgpt.chat.components.messages_widget')
 
 local ChatRenderer = classes.class()
 
@@ -10,10 +10,18 @@ local ChatRenderer = classes.class()
 
 ---@param args ChatRendererArgs
 function ChatRenderer:init(args)
-  self.chat_window = messages_widget
+  self.chat_window = MessagesWidget({
+    title = ' Mochila de Criança ',
+    maps = {
+      { 'n', '<C-k>', function() self.input:focus() end, { desc = 'Focus on Input' } },
+      { 'n', 'q',     ':q<CR>',                          { desc = 'Quit chat' } },
+    },
+  })
+
   self.prompt_lines = 1
   self.max_prompt_height = 12
   self.min_prompt_height = 5
+
   self.input = Input({
     on_submit = args.on_submit,
     on_change = vim.schedule_wrap(function(lines)
@@ -23,7 +31,11 @@ function ChatRenderer:init(args)
         self:update_layout()
       end
     end),
+    maps = {
+      { 'n', '<C-l>', function() self.chat_window:focus() end, { desc = 'Focus on Chat' } },
+    },
   })
+
   self.layout = Layout(self:get_layout_params())
   self.layout:mount()
 end
@@ -85,5 +97,18 @@ function ChatRenderer:get_layout_params()
 end
 
 function ChatRenderer:update_layout() self.layout:update(self:get_layout_params()) end
+
+-- function ChatRenderer:set_signs_for_current_buffer(sign_name, start_line, end_line)
+--   local bufnr = vim.api.nvim_get_current_buf()
+--
+--   for i = start_line, end_line do
+--     vim.fn.sign_place(0, 'mychatgpt_group', sign_name, bufnr, { lnum = i })
+--   end
+-- end
+--
+-- function ChatRenderer:remove_signs_for_current_buffer()
+--   local bufnr = vim.api.nvim_get_current_buf()
+--   vim.fn.sign_unplace('mychatgpt_group', { buffer = bufnr })
+-- end
 
 return ChatRenderer

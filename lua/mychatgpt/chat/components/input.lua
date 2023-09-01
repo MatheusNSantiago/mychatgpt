@@ -27,6 +27,7 @@ local Input = Popup:extend('NuiInput')
 ---@class OptionsArgs
 ---@field default_value string
 ---@field prompt string
+---@field maps? {mode: string, lhs: string, rhs: string, opts: table}[]
 ---@field disable_cursor_position_patch boolean
 ---@field on_submit fun(value: string)
 ---@field on_close fun()
@@ -45,6 +46,7 @@ function Input:init(options)
   popup_options.size.height = 2
   Input.super.init(self, popup_options)
 
+  self.maps = options.maps
   self._.default_value = defaults(options.default_value, '')
   self._.prompt = Text(defaults(options.prompt, ''))
   self._.disable_cursor_position_patch = defaults(options.disable_cursor_position_patch, false)
@@ -114,6 +116,12 @@ end
 
 function Input:clear() self:set_lines({ '' }) end
 
+function Input:focus()
+  local win = self.winid
+  vim.api.nvim_set_current_win(win)
+  -- vim.api.nvim_command('startinsert!')
+end
+
 function Input:mount()
   local props = self.input_props
 
@@ -130,7 +138,7 @@ function Input:mount()
     self:on(event.InsertEnter, function() vim.api.nvim_feedkeys(self._.default_value, 'n', false) end, { once = true })
   end
 
-  self:maps(props)
+  self:setup_keymaps(props)
 
   vim.api.nvim_command('startinsert!')
   vim.fn.sign_place(0, 'my_group', 'singleprompt_sign', self.bufnr, { lnum = 1, priority = 10 })
@@ -138,7 +146,7 @@ end
 
 function Input:get_lines() return vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false) end
 
-function Input:maps(props)
+function Input:setup_keymaps(props)
   self:map('i', popup_options.submit, function()
     local lines = self:get_lines()
     props.on_submit(lines)
@@ -151,6 +159,13 @@ function Input:maps(props)
 
   self:map('n', 'q', ':q<CR>', { desc = 'Quit chat' })
   self:map('i', '<C-c>', '<ESC><CMD>q<CR>', { desc = 'Quit chat' })
+
+  local maps = self.maps
+  if maps then
+    for _, map in ipairs(maps) do
+      self:map(map[1], map[2], map[3], map[4])
+    end
+  end
 end
 
 return Input
