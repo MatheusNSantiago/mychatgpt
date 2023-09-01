@@ -29,4 +29,17 @@ end
 
 function Message:get_text() return table.concat(self.lines, '\n') end
 
+---@return string | nil
+function Message:extract_code_block()
+  local text = self:get_text()
+
+  local lastCodeBlock
+  for codeBlock in text:gmatch('```.-```%s*') do
+    lastCodeBlock = codeBlock
+  end
+  if lastCodeBlock == nil then return nil end
+
+  return lastCodeBlock:gsub('```\n', ''):gsub('```', ''):match('^%s*(.-)%s*$')
+end
+
 return Message
