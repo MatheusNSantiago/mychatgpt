@@ -1,4 +1,5 @@
 local classes = require('mychatgpt.shared.classes')
+local utils = require('mychatgpt.utils')
 
 local Message = classes.class()
 
@@ -29,7 +30,7 @@ end
 
 function Message:get_text() return table.concat(self.lines, '\n') end
 
----@return string | nil
+---@return string[] | nil
 function Message:extract_code_block()
   local text = self:get_text()
 
@@ -39,7 +40,9 @@ function Message:extract_code_block()
   end
   if lastCodeBlock == nil then return nil end
 
-  return lastCodeBlock:gsub('```\n', ''):gsub('```', ''):match('^%s*(.-)%s*$')
+  lastCodeBlock = lastCodeBlock:gsub('```%w*\n', ''):gsub('```', ''):match('^%s*(.-)%s*$')
+
+  return utils.split_into_lines(lastCodeBlock)
 end
 
 return Message
