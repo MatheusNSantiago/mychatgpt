@@ -1,38 +1,36 @@
 local Chat = require('mychatgpt.chat')
 
-local M = {}
+local M = {
+  chat = nil,
+  selection = nil,
+}
 
-M.setup = function()
+function M.setup()
   vim.api.nvim_set_hl(0, 'MyChatGPT_Question', { fg = '#b4befe', italic = true, bold = false, default = true })
   vim.cmd('sign define mychatgpt_question_sign text=' .. '' .. ' texthl=MyCHATGPT_Question')
 
-  vim.cmd([[sign define mychatgpt_action_block text=│ texthl=ErrorMsg linehl=BufferLineBackground]])
+  vim.cmd([[sign define mychatgpt_action_block text=│ texthl=ErrorMsg]])
+  -- vim.cmd([[sign define mychatgpt_action_block text=│ texthl=ErrorMsg linehl=BufferLineBackground]])
 end
 
-M.open_chat = function() M.chat = Chat:new() end
+---@param params? { on_exit: function }
+function M.open_new_chat(params)
+  params = params or {}
+  M.chat = Chat.new({ on_exit = params.on_exit })
+  M.chat:open()
+end
 
 function M.send_hidden_prompt(prompt)
-  local chat = Chat:new()
-  chat:add_message({ lines = prompt, is_hidden = true })
-  chat:send_message()
+  M.chat:add_message({ lines = prompt, is_hidden = true })
+  M.chat:send_message()
 end
 
-M.teste = function()
-  -- local bufnr = vim.api.nvim_get_current_buf()
-  --
-  -- local lines, start_line, end_line = utils.get_selection_lines()
-  -- for i = start_line, end_line do
-  --   vim.fn.sign_place(0, 'mychatgpt_group', 'mychatgpt_action_block', bufnr, { lnum = i })
-  -- end
-  -- vim.fn.sign_unplace('mychatgpt_group', { buffer = bufnr })
+function M.replace_selection_with_last_code_block()
+  local code_block = M.chat:get_last_code_block()
 
-  M.open_chat()
-  M.chat:add_message({ lines = { 'Olá' } })
-  M.chat:add_message({ lines = { 'Olá! Como posso ajudar você hoje?' }, role = 'assistant' })
-end
-
-M.foo = function()
-
+  if code_block and M.selection then
+    M.selection:replace(code_block)
+  end
 end
 
 return M

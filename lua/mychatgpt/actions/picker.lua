@@ -1,3 +1,6 @@
+local actions = require('mychatgpt.actions')
+local Selection = require('mychatgpt.selection')
+
 local M = {}
 
 --- Cria um picker pro telescope
@@ -5,7 +8,7 @@ local M = {}
 ---@field keymap string
 ---@field title string
 ---@field options string[]
----@field callback function
+---@field callback fun(prompt: string[], selection)
 
 ---@param opts PickerOptions
 function M.create_picker(opts)
@@ -19,15 +22,17 @@ function M.create_picker(opts)
 
 	vim.keymap.set({ 'n', 'x' }, opts.keymap, function()
 		local delay_ms = 0
+		local selection = nil
 
 		-- Caso estaja em modo visual, o nvim precisa de um pouco de mais tempo
 		-- para processar os marks '< e '>, então é necessário adicionar um delay
 		local isVisualMode = vim.fn.mode() == 'v' or vim.fn.mode() == 'V'
 		if isVisualMode then
-			-- Sai do modo visual (para que os registradores '<,'> sejam preenchidos)
-			local ESC_FEEDKEY = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
-			vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', true)
-			delay_ms = 100
+			selection = Selection.get_selection()
+			-- -- Sai do modo visual (para que os registradores '<,'> sejam preenchidos)
+			-- local ESC_FEEDKEY = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
+			-- vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', true)
+			-- delay_ms = 100
 		end
 
 		vim.defer_fn(function()
@@ -40,16 +45,22 @@ function M.create_picker(opts)
 						}),
 						sorter = require('telescope.sorters').get_generic_fuzzy_sorter(),
 						attach_mappings = function(prompt_buffer_number)
-							local actions = require('telescope.actions')
+							local telescope_action = require('telescope.actions')
 
 							-- On item select
-							actions.select_default:replace(function()
+							telescope_action.select_default:replace(function()
 								local state = require('telescope.actions.state')
-								local selection = state.get_selected_entry()
+								local selected_entry = state.get_selected_entry()
 
-								actions.close(prompt_buffer_number) -- Closing the picker
+								telescope_action.close(prompt_buffer_number) -- Closing the picker
 
-								opts.callback(selection.value)  -- executa o callback
+								if selection then
+									actions.execute_action(selected_entry.value, function(prompt)
+										opts.callback(prompt, selection) -- executa o callback
+									end)
+								else
+									-- opts.callback(prompt, selection) -- executa o callback
+								end
 							end)
 							return true
 						end,
@@ -59,4 +70,4 @@ function M.create_picker(opts)
 	end)
 end
 
-return M.create_picker
+return M
