@@ -1,23 +1,4 @@
 local M = {}
-local ESC_FEEDKEY = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
-
-function M.get_selection_lines()
-  vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', true)
-  vim.api.nvim_feedkeys('gv', 'x', false)
-  vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', true)
-
-  local _, start_line, start_col = unpack(vim.fn.getpos("'<"))
-  local _, end_line, end_col = unpack(vim.fn.getpos("'>"))
-
-  local bufnr = vim.api.nvim_get_current_buf()
-  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
-
-  -- shorten first/last line according to start_col/end_col
-  lines[#lines] = lines[#lines]:sub(1, end_col)
-  lines[1] = lines[1]:sub(start_col)
-
-  return lines, start_line, end_line, start_col, end_col
-end
 
 function M.get_buf_filetype()
   local bufnr = vim.api.nvim_get_current_buf()
