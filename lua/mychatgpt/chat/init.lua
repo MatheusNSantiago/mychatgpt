@@ -1,17 +1,24 @@
 local classes = require('mychatgpt.shared.classes')
-local ChatRenderer = require('mychatgpt.chat.renderer')
+local Ui = require('mychatgpt.chat.ui')
 local Message = require('mychatgpt.message')
 local Api = require('mychatgpt.api')
 
 local Chat = classes.class()
 
-function Chat:init()
+---@class ChatOpts
+---@field on_exit? function
+---@field maps? {mode: string, lhs: string, rhs: string, opts: table}[]
+
+---@param opts ChatOpts
+function Chat:init(opts)
   self.messages = {}
-  self.renderer = ChatRenderer.new({
-    on_submit = function(lines)
+  self.on_exit = function() end
+  self.Ui = Ui.new({
+    on_submit_input = function(lines)
       self:add_message({ lines = lines })
       self:send_message()
     end,
+    on_exit = opts.on_exit,
   })
 end
 
@@ -34,7 +41,7 @@ function Chat:add_message(args)
     is_hidden = is_hidden,
   })
 
-  if not is_hidden then self.renderer:render_message(message) end
+  if not is_hidden then self.Ui:render_message(message) end
 
   table.insert(self.messages, message)
 end
@@ -51,14 +58,28 @@ function Chat:send_message()
     end
 
     -- Ainda não terminou de responder
-    self.renderer:render_answer_delta(answer, state)
+    self.Ui:render_answer_delta(answer, state)
   end)
 end
 
 function Chat:set_prompt(lines)
   table.insert(lines, '')
-  self.renderer.input:set_lines(lines)
-  self.renderer.input:scroll_to_bottom()
+  self.Ui.input:set_lines(lines)
+  self.Ui.input:scroll_to_bottom()
+end
+
+function Chat:open() self.Ui:mount() end
+
+---@return string | nil
+function Chat:get_last_code_block()
+  local code_block
+
+  for _, message in ipairs(self.messages) do
+    local code_block_or_nil = message:extract_code_block()
+    if code_block_or_nil ~= nil then code_block = code_block_or_nil end
+  end
+
+  return code_block
 end
 
 function Chat:_get_last_line_number()

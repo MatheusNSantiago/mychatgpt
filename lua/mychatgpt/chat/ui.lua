@@ -3,13 +3,14 @@ local Layout = require('nui.layout')
 local Input = require('mychatgpt.chat.components.input')
 local MessagesWidget = require('mychatgpt.chat.components.messages_widget')
 
-local ChatRenderer = classes.class()
+local Ui = classes.class()
 
----@class ChatRendererArgs
----@field on_submit fun(lines: string[])
+---@class UiOptions
+---@field on_submit_input fun(lines: string[])
+---@field on_exit function
 
----@param args ChatRendererArgs
-function ChatRenderer:init(args)
+---@param opts UiOptions
+function Ui:init(opts)
   self.chat_window = MessagesWidget({
     title = ' Mochila de Criança ',
     maps = {
@@ -23,7 +24,7 @@ function ChatRenderer:init(args)
   self.min_prompt_height = 5
 
   self.input = Input({
-    on_submit = args.on_submit,
+    on_submit = opts.on_submit_input,
     on_change = vim.schedule_wrap(function(lines)
       local has_number_of_lines_changed = self.prompt_lines ~= #lines
       if has_number_of_lines_changed then
@@ -37,10 +38,21 @@ function ChatRenderer:init(args)
   })
 
   self.layout = Layout(self:get_layout_params())
-  self.layout:mount()
+
+  self.components = { self.chat_window, self.input }
+  for _, component in ipairs(self.components) do
+    component:on('QuitPre', function()
+      vim.schedule(function()
+        if opts.on_exit then opts.on_exit() end
+        self.layout:unmount()
+      end)
+    end)
+  end
 end
 
-function ChatRenderer:render_message(message)
+function Ui:mount() self.layout:mount() end
+
+function Ui:render_message(message)
   local start_line = message.start_line
   local end_line = message.end_line
   local lines = message.lines
@@ -56,7 +68,7 @@ function ChatRenderer:render_message(message)
 end
 
 ---@param delta string[]
-function ChatRenderer:render_answer_delta(delta, state)
+function Ui:render_answer_delta(delta, state)
   if state == 'START' then
     -- Começa uma nova linha.
     self.chat_window:set_lines(-1, -1, { '' })
@@ -76,7 +88,7 @@ function ChatRenderer:render_answer_delta(delta, state)
   end
 end
 
-function ChatRenderer:get_layout_params()
+function Ui:get_layout_params()
   local base_height = 2 + self.min_prompt_height -- esse 2 é o mínimo para o input (menos que 2 da erro)
   local lines_over_min_height = math.max(0, self.prompt_lines - self.min_prompt_height)
 
@@ -96,19 +108,6 @@ function ChatRenderer:get_layout_params()
   return config, box
 end
 
-function ChatRenderer:update_layout() self.layout:update(self:get_layout_params()) end
+function Ui:update_layout() self.layout:update(self:get_layout_params()) end
 
--- function ChatRenderer:set_signs_for_current_buffer(sign_name, start_line, end_line)
---   local bufnr = vim.api.nvim_get_current_buf()
---
---   for i = start_line, end_line do
---     vim.fn.sign_place(0, 'mychatgpt_group', sign_name, bufnr, { lnum = i })
---   end
--- end
---
--- function ChatRenderer:remove_signs_for_current_buffer()
---   local bufnr = vim.api.nvim_get_current_buf()
---   vim.fn.sign_unplace('mychatgpt_group', { buffer = bufnr })
--- end
-
-return ChatRenderer
+return Ui
