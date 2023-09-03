@@ -14,7 +14,7 @@ function M.get_actions()
   return vim.fn.json_decode(content)
 end
 
-local function render_template(title)
+local function render_template(title, selection)
   local actions = M.get_actions() or {}
   local item = actions[title]
   local prompt = item.prompt
@@ -25,8 +25,16 @@ local function render_template(title)
 
   -- replace all {{}} with the value of the variable
   for variable in variables do
-    local value = item[variable]
-    value = value[filetype] or value.default
+    local value = ''
+
+    if variable == 'filetype' then
+      value = filetype
+    elseif variable == 'selection' then
+      value = table.concat(selection.lines, '\n')
+    else
+      value = item[variable]
+      value = value[filetype] or value.default
+    end
 
     prompt = prompt:gsub('{{' .. variable .. '}}', value)
   end
@@ -38,11 +46,8 @@ end
 ---@param action string
 ---@param callback fun(prompt: string[])
 function M.execute_action(action, callback)
-  local system_message = render_template(action)
-  system_message = vim.list_extend(system_message, { '', '' })
-
   local selection = Selection.get_selection()
-  local final_prompt = vim.list_extend(system_message, selection.lines)
+  local final_prompt = render_template(action, selection)
 
   callback(final_prompt)
 end

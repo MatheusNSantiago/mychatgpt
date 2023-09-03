@@ -1,6 +1,6 @@
 {
   "Documentar": {
-    "prompt": "Write a {{standard}} docstring for the code below following the following rules:\n- Don't add documentation in the inner scope of the function.\n- Give a concise explanation of the code does.\n- Wrap your code in a markdown code block.\n- Your response must contain only the code.\n{{extra}}",
+    "prompt": "Write a {{standard}} docstring for the code below following the following rules:\n- Don't add documentation in the inner scope of the function.\n- Give a concise explanation of the code does.\n- Wrap your code in a markdown code block.\n- Your response must contain only the code.\n{{extra}}\n\n{{selection}}",
     "standard": {
       "default": "",
       "lua": "EmmyLua"
@@ -9,5 +9,8 @@
       "default": "",
       "lua": "- Use 3 dashes for all the EmmyLua annotations (like ---@param param 1 string)."
     }
+  },
+  "Explicar": {
+    "prompt": "Explique o código abaixo seguindo as seguintes regras:\n- Use formato markdown\n- Use bullet lists\n- Use bullet lists\n- Seja conciso\n\n{{selection}}"
   }
 }
