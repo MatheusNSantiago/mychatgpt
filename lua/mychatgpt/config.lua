@@ -9,6 +9,7 @@ return {
     n = 1,
   },
   popup_input = {
+    focusable = true,
     prompt = '  ',
     border = {
       highlight = 'FloatBorder',
@@ -19,7 +20,7 @@ return {
       winhighlight = 'Normal:Normal,FloatBorder:FloatBorder',
     },
     submit = '<Enter>',
-    submit_n = '<C-Enter>',
+    submit_n = '<Enter>',
   },
   popup_layout = {
     default = 'center',

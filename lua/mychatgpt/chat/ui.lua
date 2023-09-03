@@ -1,6 +1,7 @@
 local classes = require('mychatgpt.shared.classes')
 local Layout = require('nui.layout')
 local Input = require('mychatgpt.chat.components.input')
+local Split = require('nui.split')
 local MessagesWidget = require('mychatgpt.chat.components.messages_widget')
 
 local Ui = classes.class()
@@ -11,11 +12,13 @@ local Ui = classes.class()
 
 ---@param opts UiOptions
 function Ui:init(opts)
+  self.editor_win = vim.api.nvim_get_current_win()
   self.chat_window = MessagesWidget({
     title = ' Mochila de Criança ',
     maps = {
-      { 'n', '<C-k>', function() self.input:focus() end, { desc = 'Focus on Input' } },
-      { 'n', 'q',     ':q<CR>',                          { desc = 'Quit chat' } },
+      { 'n', '<C-k>', function() self.input:focus() end,      { desc = 'Focus on Input' } },
+      { 'n', '<C-j>', function() self:_focus_on_editor() end, { desc = 'Focus on Editor' } },
+      { 'n', 'q',     ':q<CR>',                               { desc = 'Quit chat' } },
     },
   })
 
@@ -34,6 +37,7 @@ function Ui:init(opts)
     end),
     maps = {
       { 'n', '<C-l>', function() self.chat_window:focus() end, { desc = 'Focus on Chat' } },
+      { 'n', '<C-j>', function() self:_focus_on_editor() end, { desc = 'Focus on Editor' } },
     },
   })
 
@@ -44,13 +48,35 @@ function Ui:init(opts)
     component:on('QuitPre', function()
       vim.schedule(function()
         if opts.on_exit then opts.on_exit() end
-        self.layout:unmount()
+
+        self:_focus_on_editor()
+        self:unmount()
       end)
     end)
   end
 end
 
-function Ui:mount() self.layout:mount() end
+function Ui:mount()
+  self.fake_buffer = self:init_fake_buffer()
+  self.layout:mount()
+end
+
+function Ui:unmount()
+  self.fake_buffer:unmount()
+  self.layout:unmount()
+end
+
+--- Um hack para transformar a UI em um buffer que da pra focar
+--- Isso é pq o Input e o Popup não tem como focar
+function Ui:init_fake_buffer()
+  local split = Split({ position = 'right', size = '1%' })
+  split:mount()
+
+  -- Focou no buffer? Foca no input
+  split:on('BufEnter', function() self.input:focus() end)
+
+  return split
+end
 
 function Ui:render_message(message)
   local start_line = message.start_line
@@ -109,5 +135,7 @@ function Ui:get_layout_params()
 end
 
 function Ui:update_layout() self.layout:update(self:get_layout_params()) end
+
+function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
 
 return Ui
