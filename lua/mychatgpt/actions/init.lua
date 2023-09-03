@@ -3,23 +3,20 @@ local Selection = require('mychatgpt.selection')
 
 local M = {}
 
-M.prompts = {
-  ['Documentar'] = {
-    prompt =
-    "Write a {{standard}} docstring for the code below following the following rules:\n- Don't add documentation in the inner scope of the function.\n- Give a concise explanation of the code does.\n- Wrap your code in a markdown code block.\n- Your response must contain only the code.\n{{extra}}",
-    standard = {
-      default = '',
-      lua = 'EmmyLua',
-    },
-    extra = {
-      default = '',
-      lua = '- Use 3 dashes for all the EmmyLua annotations (like ---@param param 1 string).',
-    },
-  },
-}
+function M.get_actions()
+  local path = debug.getinfo(1, 'S').source:sub(2):match('(.*/)') .. 'actions.json'
+  local file = io.open(path, 'rb')
+  if not file then return nil end
+
+  local content = file:read('*a')
+  file:close()
+
+  return vim.fn.json_decode(content)
+end
 
 local function render_template(title)
-  local item = M.prompts[title]
+  local actions = M.get_actions() or {}
+  local item = actions[title]
   local prompt = item.prompt
   local filetype = utils.get_buf_filetype()
 

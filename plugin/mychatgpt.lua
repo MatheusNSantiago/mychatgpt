@@ -3,11 +3,11 @@ local picker = require('mychatgpt.actions.picker')
 local mychatgpt = require('mychatgpt')
 
 local function reload()
-  -- vim.cmd('wa')
-  -- vim.cmd('source plugin/mychatgpt.lua')
-  -- for k in pairs(package.loaded) do
-  --   if k:match('^mychatgpt') then package.loaded[k] = nil end
-  -- end
+  vim.cmd('wa')
+  vim.cmd('source plugin/mychatgpt.lua')
+  for k in pairs(package.loaded) do
+    if k:match('^mychatgpt') then package.loaded[k] = nil end
+  end
 end
 
 vim.keymap.set('n', '<leader>a', function()
@@ -24,7 +24,7 @@ end)
 picker.create_picker({
   keymap = '<leader><leader>o',
   title = 'MyChatGPT',
-  options = vim.tbl_keys(actions.prompts),
+  options = vim.tbl_keys(actions.get_actions() or {}),
   callback = function(prompt, selection)
     reload()
     if selection then
