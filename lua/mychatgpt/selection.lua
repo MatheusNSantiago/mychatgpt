@@ -47,16 +47,15 @@ function Selection:replace(lines)
 end
 
 function Selection:get_lines_with_line_number()
-  local lines = vim.api.nvim_buf_get_lines(self.bufnr, self.start_line - 1, self.end_line, false)
-
+  local numbered_lines = {}
   -- Get the max number of digits needed to display a line number
-  local maxDigits = string.len(tostring(#lines + self.start_line))
+  local maxDigits = string.len(tostring(#self.lines + self.start_line))
   -- Prepend each line with its line number zero padded to numDigits
-  for i, line in ipairs(lines) do
-    lines[i] = string.format('%0' .. maxDigits .. 'd', i - 1 + self.start_line) .. ' ' .. line
+  for i, line in ipairs(self.lines) do
+    table.insert(numbered_lines, string.format('%0' .. maxDigits .. 'd', i - 1 + self.start_line) .. ' ' .. line)
   end
 
-  return lines
+  return numbered_lines
 end
 
 function M.get_selection()
