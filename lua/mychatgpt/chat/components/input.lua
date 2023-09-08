@@ -119,7 +119,6 @@ function Input:clear() self:set_lines({ '' }) end
 function Input:focus()
   local win = self.winid
   vim.api.nvim_set_current_win(win)
-  -- vim.api.nvim_command('startinsert!')
 end
 
 function Input:mount()
