@@ -10,7 +10,6 @@ function M.setup()
   vim.cmd('sign define mychatgpt_question_sign text=' .. '' .. ' texthl=MyCHATGPT_Question')
 
   vim.cmd([[sign define mychatgpt_action_block text=│ texthl=ErrorMsg]])
-  -- vim.cmd([[sign define mychatgpt_action_block text=│ texthl=ErrorMsg linehl=BufferLineBackground]])
 end
 
 ---@param params? { on_exit: function }
@@ -20,17 +19,20 @@ function M.open_new_chat(params)
   M.chat:open()
 end
 
-function M.send_hidden_prompt(prompt)
-  M.chat:add_message({ lines = prompt, is_hidden = true })
-  M.chat:send_message()
+---@param messages Message[]
+function M.send_messages(messages)
+  for _, message in ipairs(messages) do
+    M.chat:add_message(message)
+  end
+  M.chat:send()
 end
 
 function M.replace_selection_with_last_code_block()
   local code_block = M.chat:get_last_code_block()
 
-  if code_block and M.selection then
-    M.selection:replace(code_block)
-  end
+  if code_block and M.selection then M.selection:replace(code_block) end
 end
+
+function M.set_current_selection(selection) M.selection = selection end
 
 return M

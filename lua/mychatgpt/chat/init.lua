@@ -16,7 +16,7 @@ function Chat:init(opts)
   self.Ui = Ui.new({
     on_submit_input = function(lines)
       self:add_message({ lines = lines })
-      self:send_message()
+      self:send()
     end,
     on_exit = opts.on_exit,
   })
@@ -27,12 +27,12 @@ end
 ---@field lines string[]
 ---@field is_hidden? boolean (default false)
 
----@param args AddMessageArgs
+---@param args AddMessageArgs | Message
 function Chat:add_message(args)
   local start_line = self:_get_last_line_number() + 1
   local role = args.role or 'user'
   local lines = args.lines
-  local is_hidden = args.is_hidden == nil and false or args.is_hidden
+  local is_hidden = args.is_hidden
 
   local message = Message.new({
     lines = lines,
@@ -48,7 +48,7 @@ end
 
 --- Envia as mensagens para o servidor e renderiza a resposta
 --- como a API é stateless, é necessário enviar todas as mensagens
-function Chat:send_message()
+function Chat:send()
   Api.chat_completions(self.messages, function(answer, state)
     if state == 'END' then
       return self:add_message({
