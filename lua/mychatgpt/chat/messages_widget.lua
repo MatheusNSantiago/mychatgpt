@@ -1,36 +1,36 @@
+---@diagnostic disable: undefined-field
 local Popup = require('nui.popup')
-local class = require('mychatgpt.shared.class')
 
 ---@class MessagesWidget
-local MessagesWidget = class('MessagesWidget')
+local MessagesWidget = Popup:extend('MessageWidget')
 
 ---@class MessagesWidgetOptions
 ---@field title string
 ---@field maps? {mode: string, lhs: string, rhs: string, opts: table}[]
 
 ---@param opts MessagesWidgetOptions
-function MessagesWidget:initialize(opts)
+function MessagesWidget:init(opts)
   self.maps = opts.maps or {}
-  self.chat_window = Popup({
-    zindex = 50,
-    border = {
-      highlight = 'FloatBorder',
-      style = 'rounded',
-      text = { top = opts.title },
-    },
-    win_options = {
-      wrap = true,
-      linebreak = true,
-      foldcolumn = '1',
-      winhighlight = 'Normal:Normal,FloatBorder:FloatBorder',
-    },
-    buf_options = { filetype = 'markdown' },
-  })
 
-  self.bufnr = self.chat_window.bufnr
-  self.winid = self.chat_window.winid
-
-  -- self.chat_window:on('QuitPre', function() self.chat_window:unmount() end)
+  MessagesWidget.super.init(
+    self,
+    {
+      zindex = 50,
+      border = {
+        highlight = 'FloatBorder',
+        style = 'rounded',
+        text = { top = opts.title },
+      },
+      win_options = {
+        wrap = true,
+        linebreak = true,
+        foldcolumn = '1',
+        winhighlight = 'Normal:Normal,FloatBorder:FloatBorder',
+      },
+      buf_options = { filetype = 'markdown' },
+    }
+  )
+  self:_setup_keymaps()
 end
 
 function MessagesWidget:scroll_to_end()
@@ -70,11 +70,9 @@ function MessagesWidget:focus() vim.api.nvim_set_current_win(self.winid) end
 
 function MessagesWidget:_setup_keymaps()
   for _, map in ipairs(self.maps) do
-    self.chat_window:map(map[1], map[2], map[3], map[4])
+    self:map(map[1], map[2], map[3], map[4])
   end
 end
-
-function MessagesWidget:on(event, callback) self.chat_window:on(event, callback) end
 
 ---@alias MessagesWidget.constructor fun(options: MessagesWidgetOptions): MessagesWidget
 ---@type MessagesWidget|MessagesWidget.constructor

@@ -16,13 +16,14 @@ local Ui = class('Ui')
 
 ---@param opts UiOptions
 function Ui:initialize(opts)
-  self.editor_win = vim.api.nvim_get_current_win()
+  self.editor_win = vim.api.nvim_get_current_win() -- salva o win atual pra voltar depois
   self.chat_window = MessagesWidget({
     title = ' Mochila de Criança ',
     maps = {
       { 'n', '<C-k>', function() self.input:focus() end,      { desc = 'Focus on Input' } },
       { 'n', '<C-j>', function() self:_focus_on_editor() end, { desc = 'Focus on Editor' } },
-      { 'n', 'q',     ':q<CR>',                               { desc = 'Quit chat' } },
+      { 'n', 'q',     function() self:unmount() end,          { desc = 'Quit chat' } },
+      { 'i', '<C-c>', function() self:unmount() end,          { desc = 'Quit chat' } },
     },
   })
 
@@ -32,55 +33,26 @@ function Ui:initialize(opts)
   self.prompt_height = defaults(opts.prompt_height, { min = 5, max = 12 })
   self.input = Input({
     on_submit = opts.on_submit_input,
-    on_change = function(lines)
-      -- local has_number_of_lines_changed = self.prompt_lines ~= #lines
-      -- if has_number_of_lines_changed then
-      --   self.prompt_lines = #lines -- update prompt_lines
-      --   self:update_layout()
-      -- end
-    end,
+    on_change = function(lines) self:_update_input_height(lines) end,
     maps = {
       { 'n', '<C-l>', function() self.chat_window:focus() end, { desc = 'Focus on Chat' } },
       { 'n', '<C-j>', function() self:_focus_on_editor() end,  { desc = 'Focus on Editor' } },
+      { 'n', 'q',     function() self:unmount() end,           { desc = 'Quit chat' } },
+      { 'i', '<C-c>', function() self:unmount() end,           { desc = 'Quit chat' } },
     },
   })
 
   self.layout = Layout(self:get_layout_params())
 
+  -- Antes de quitar de qualquer componente, da um unmount e retorna o foco pro editor
   local components = { self.chat_window, self.input }
   for _, component in ipairs(components) do
+    ---@diagnostic disable-next-line: undefined-field
     component:on('QuitPre', function()
-      vim.schedule(function()
-        self:unmount()
-        if opts.on_exit then opts.on_exit() end
-        --
-        --   self:unmount()
-        --   self:_focus_on_editor()
-      end)
+      self:unmount()
+      self:_focus_on_editor()
     end)
   end
-end
-
-function Ui:mount()
-  -- self.fake_buffer = self:init_fake_buffer()
-  self.layout:mount()
-end
-
-function Ui:unmount()
-  -- self.fake_buffer:unmount()
-  self.layout:unmount()
-end
-
----Um hack para transformar a UI em um focusable buffer
----Isso é pq o Input e o Popup não tem como focar
-function Ui:init_fake_buffer()
-  local split = Split({ position = 'right', size = '1%' }) -- menor tamanho possível
-  split:mount()
-
-  -- Focou no buffer? -> Foca no input
-  split:on('BufEnter', function() self.input:focus() end)
-
-  return split
 end
 
 function Ui:render_message(message)
@@ -141,7 +113,38 @@ end
 
 function Ui:update_layout() self.layout:update(self:get_layout_params()) end
 
+function Ui:mount()
+  self.fake_buffer = self:init_fake_buffer()
+  self.layout:mount()
+end
+
+function Ui:unmount()
+  self.fake_buffer:unmount()
+  self.layout:unmount()
+end
+
+---Um hack para transformar a UI em um focusable buffer
+---Isso é pq o Input e o Popup não tem como focar
+function Ui:init_fake_buffer()
+  local split = Split({ position = 'right', size = '1%' }) -- menor tamanho possível
+  split:mount()
+
+  -- Focou no buffer? -> Foca no input
+  split:on('BufEnter', function() self.input:focus() end)
+
+  return split
+end
+
 function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
+
+function Ui:_update_input_height(lines)
+  local has_number_of_lines_changed = self.prompt_lines ~= #lines
+
+  if has_number_of_lines_changed then
+    self.prompt_lines = #lines -- update prompt_lines
+    self:update_layout()
+  end
+end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
 ---@type Ui|Ui.constructor

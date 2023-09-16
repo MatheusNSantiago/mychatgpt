@@ -104,7 +104,7 @@ local utils = require('mychatgpt.utils')
 local defaults = utils.defaults
 
 ---@class Input
-local Input = NuiInput:extend('NuiInput')
+local Input = NuiInput:extend('Input')
 
 ---@class InputOptions
 ---@field prompt? string (default: '')
@@ -157,8 +157,6 @@ end
 
 function Input:mount() Input.super.mount(self) end
 
-function Input:on(event, callback, opts) Input.super.on(self, event, callback, opts) end
-
 function Input:set_lines(lines) vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines) end
 
 function Input:scroll_to_bottom()
@@ -192,8 +190,8 @@ function Input:setup_keymaps()
     after_submit_hook()
   end, { noremap = true })
 
-  self:map('n', 'q', function() self:unmount() end, { desc = 'Quit chat' })
-  self:map('i', '<C-c>', function() self:unmount() end, { desc = 'Quit chat' })
+  -- self:map('n', 'q', function() self:unmount() end, { desc = 'Quit chat' })
+  -- self:map('i', '<C-c>', function() self:unmount() end, { desc = 'Quit chat' })
 
   -- set aditional user defined keymaps
   for _, map in ipairs(self.maps) do
