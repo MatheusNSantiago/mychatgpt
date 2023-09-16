@@ -41,4 +41,6 @@ function M.get_line_diagnostics()
   return obj
 end
 
+function M.defaults(v, default_value) return type(v) == 'nil' and default_value or v end
+
 return M
