@@ -1,17 +1,21 @@
-local classes = require('mychatgpt.shared.classes')
+local class = require('mychatgpt.shared.class')
 local Layout = require('nui.layout')
-local Input = require('mychatgpt.chat.components.input')
+local defaults = require('mychatgpt.utils').defaults
+local Input = require('mychatgpt.shared.input')
 local Split = require('nui.split')
-local MessagesWidget = require('mychatgpt.chat.components.messages_widget')
 
-local Ui = classes.class()
+local MessagesWidget = require('mychatgpt.chat.messages_widget')
+
+---@class Ui
+local Ui = class('Ui')
 
 ---@class UiOptions
 ---@field on_submit_input fun(lines: string[])
----@field on_exit function
+---@field on_exit function faz algo quando a UI é fechada
+---@field prompt_height? {min: number, max: number} (default {min = 5, max = 12})
 
 ---@param opts UiOptions
-function Ui:init(opts)
+function Ui:initialize(opts)
   self.editor_win = vim.api.nvim_get_current_win()
   self.chat_window = MessagesWidget({
     title = ' Mochila de Criança ',
@@ -23,56 +27,57 @@ function Ui:init(opts)
   })
 
   self.prompt_lines = 1
-  self.max_prompt_height = 12
-  self.min_prompt_height = 5
 
+  ---@type {min: number, max: number}
+  self.prompt_height = defaults(opts.prompt_height, { min = 5, max = 12 })
   self.input = Input({
     on_submit = opts.on_submit_input,
-    on_change = vim.schedule_wrap(function(lines)
-      local has_number_of_lines_changed = self.prompt_lines ~= #lines
-      if has_number_of_lines_changed then
-        self.prompt_lines = #lines -- update prompt_lines
-        self:update_layout()
-      end
-    end),
+    on_change = function(lines)
+      -- local has_number_of_lines_changed = self.prompt_lines ~= #lines
+      -- if has_number_of_lines_changed then
+      --   self.prompt_lines = #lines -- update prompt_lines
+      --   self:update_layout()
+      -- end
+    end,
     maps = {
       { 'n', '<C-l>', function() self.chat_window:focus() end, { desc = 'Focus on Chat' } },
-      { 'n', '<C-j>', function() self:_focus_on_editor() end, { desc = 'Focus on Editor' } },
+      { 'n', '<C-j>', function() self:_focus_on_editor() end,  { desc = 'Focus on Editor' } },
     },
   })
 
   self.layout = Layout(self:get_layout_params())
 
-  self.components = { self.chat_window, self.input }
-  for _, component in ipairs(self.components) do
+  local components = { self.chat_window, self.input }
+  for _, component in ipairs(components) do
     component:on('QuitPre', function()
       vim.schedule(function()
-        if opts.on_exit then opts.on_exit() end
-
-        self:_focus_on_editor()
         self:unmount()
+        if opts.on_exit then opts.on_exit() end
+        --
+        --   self:unmount()
+        --   self:_focus_on_editor()
       end)
     end)
   end
 end
 
 function Ui:mount()
-  self.fake_buffer = self:init_fake_buffer()
+  -- self.fake_buffer = self:init_fake_buffer()
   self.layout:mount()
 end
 
 function Ui:unmount()
-  self.fake_buffer:unmount()
+  -- self.fake_buffer:unmount()
   self.layout:unmount()
 end
 
---- Um hack para transformar a UI em um buffer que da pra focar
---- Isso é pq o Input e o Popup não tem como focar
+---Um hack para transformar a UI em um focusable buffer
+---Isso é pq o Input e o Popup não tem como focar
 function Ui:init_fake_buffer()
-  local split = Split({ position = 'right', size = '1%' })
+  local split = Split({ position = 'right', size = '1%' }) -- menor tamanho possível
   split:mount()
 
-  -- Focou no buffer? Foca no input
+  -- Focou no buffer? -> Foca no input
   split:on('BufEnter', function() self.input:focus() end)
 
   return split
@@ -115,10 +120,10 @@ function Ui:render_answer_delta(delta, state)
 end
 
 function Ui:get_layout_params()
-  local base_height = 2 + self.min_prompt_height -- esse 2 é o mínimo para o input (menos que 2 da erro)
-  local lines_over_min_height = math.max(0, self.prompt_lines - self.min_prompt_height)
+  local base_height = 2 + self.prompt_height.min -- esse 2 é o mínimo para o input (menos que 2 da erro)
+  local lines_over_min_height = math.max(0, self.prompt_lines - self.prompt_height.min)
 
-  local prompt_height = math.min(base_height + lines_over_min_height, self.max_prompt_height)
+  local prompt_height = math.min(base_height + lines_over_min_height, self.prompt_height.max)
 
   local box = Layout.Box({
     Layout.Box(self.chat_window, { grow = 1 }),
@@ -138,4 +143,8 @@ function Ui:update_layout() self.layout:update(self:get_layout_params()) end
 
 function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
 
-return Ui
+---@alias Ui.constructor fun(options: UiOptions): Ui
+---@type Ui|Ui.constructor
+local _Ui = Ui
+
+return _Ui

@@ -1,9 +1,10 @@
-local classes = require('mychatgpt.shared.classes')
+local class = require('mychatgpt.shared.class')
 local M = {}
 
-local Selection = classes.class()
-
 ---@class Selection
+local Selection = class("Selection")
+
+---@class SelectionOptions
 ---@field lines string[]
 ---@field start_line integer
 ---@field end_line integer
@@ -11,14 +12,14 @@ local Selection = classes.class()
 ---@field end_col integer
 ---@field bufnr integer
 
----@param selection Selection
-function Selection:init(selection)
-  self.lines = selection.lines
-  self.start_line = selection.start_line
-  self.end_line = selection.end_line
-  self.start_col = selection.start_col
-  self.end_col = selection.end_col
-  self.bufnr = selection.bufnr
+---@param opts SelectionOptions
+function Selection:initialize(opts)
+  self.lines = opts.lines
+  self.start_line = opts.start_line
+  self.end_line = opts.end_line
+  self.start_col = opts.start_col
+  self.end_col = opts.end_col
+  self.bufnr = opts.bufnr
 end
 
 function Selection:mark_with_sign()
@@ -75,7 +76,9 @@ function M.get_selection()
   lines[#lines] = lines[#lines]:sub(1, end_col)
   lines[1] = lines[1]:sub(start_col)
 
-  return Selection.new({
+  ---@alias Selection.constructor fun(options: SelectionOptions): Selection
+  ---@type Selection|Selection.constructor
+  local selection =  Selection({
     lines = lines,
     start_line = start_line,
     end_line = end_line,
@@ -83,6 +86,7 @@ function M.get_selection()
     end_col = end_col,
     bufnr = bufnr,
   })
-end
 
+  return selection
+end
 return M

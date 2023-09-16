@@ -1,16 +1,17 @@
-local classes = require('mychatgpt.shared.classes')
+local class = require('mychatgpt.shared.class')
 local utils = require('mychatgpt.utils')
 
-local Message = classes.class()
-
 ---@class Message
+local Message = class('Message')
+
+---@class MessageOptions
 ---@field role string 'user' | 'system' | 'assistant'
 ---@field lines string[]
 ---@field start_line? integer (default 0) O linha onde começa a mensagem em relação a source
 ---@field is_hidden? boolean (default false) Se a mensagem deve ser renderizada ou não
 
---- @param args Message
-function Message:init(args)
+--- @param args MessageOptions
+function Message:initialize(args)
   local lines = args.lines
   self.is_hidden = args.is_hidden == nil and false or args.is_hidden
 
@@ -45,4 +46,8 @@ function Message:extract_code_block()
   return utils.split_into_lines(lastCodeBlock)
 end
 
-return Message
+---@alias Message.constructor fun(options: MessageOptions): Message
+---@type Message|Message.constructor
+local _Message = Message
+
+return _Message

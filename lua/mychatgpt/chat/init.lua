@@ -1,19 +1,20 @@
-local classes = require('mychatgpt.shared.classes')
+local class = require('mychatgpt.shared.class')
 local Ui = require('mychatgpt.chat.ui')
 local Message = require('mychatgpt.message')
 local Api = require('mychatgpt.api')
 
-local Chat = classes.class()
+---@class Chat
+local Chat = class('Chat')
 
----@class ChatOpts
+---@class ChatOptions
 ---@field on_exit? function
 ---@field maps? {mode: string, lhs: string, rhs: string, opts: table}[]
 
----@param opts ChatOpts
-function Chat:init(opts)
+---@param opts ChatOptions
+function Chat:initialize(opts)
   self.messages = {}
   self.on_exit = function() end
-  self.Ui = Ui.new({
+  self.Ui = Ui({
     on_submit_input = function(lines)
       self:add_message({ lines = lines })
       self:send()
@@ -34,7 +35,7 @@ function Chat:add_message(args)
   local lines = args.lines
   local is_hidden = args.is_hidden
 
-  local message = Message.new({
+  local message = Message({
     lines = lines,
     role = role,
     start_line = start_line,
@@ -92,4 +93,8 @@ function Chat:_get_last_line_number()
   return 0
 end
 
-return Chat
+---@alias Chat.constructor fun(options: ChatOptions): Chat
+---@type Chat|Chat.constructor
+local _Chat = Chat
+
+return _Chat
