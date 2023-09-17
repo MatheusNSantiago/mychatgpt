@@ -43,4 +43,12 @@ end
 
 function M.defaults(v, default_value) return type(v) == 'nil' and default_value or v end
 
+function M.concat_lists(...)
+  local result = {}
+  for _, tbl in ipairs({ ... }) do
+    vim.list_extend(result, tbl)
+  end
+  return result
+end
+
 return M
