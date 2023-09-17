@@ -20,6 +20,11 @@ vim.keymap.set('n', '<leader>v', function()
   mychatgpt.open_new_chat()
 end)
 
+vim.keymap.set({ 'x', 'n' }, '<leader>k', function()
+  reload()
+  mychatgpt.teste()
+end)
+
 picker.create_picker({
   keymap = '<leader><leader>o',
   title = 'MyChatGPT',

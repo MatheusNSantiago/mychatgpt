@@ -28,32 +28,11 @@ function M.send_messages(messages)
 end
 
 function M.teste()
-  -- 1) pegar seleção
-  -- local selection = require('mychatgpt.selection').get_selection()
-  local Input = require('mychatgpt.shared.input')
-  local input = Input({
-    label = 'ola',
-    layout = {
-      relative = 'cursor',
-      position = { row = 2, col = 0 },
-      size = { width = 20, height = 2 },
-    },
-    on_submit = function(value)
-      vim.print(value)
-      -- 2) mandar texto + input value
-      -- local final_text = {}
-      --
-      -- vim.list_extend(final_text, selection.lines)
-      -- vim.list_extend(final_text, { '---' })
-      -- vim.list_extend(final_text, value)
-      --
-      -- M.open_new_chat()
-      -- M.chat:add_message({ lines = final_text, is_hidden = true })
-      -- M.chat:send()
-    end,
-    close_after_submit = true,
-  })
-  input:mount()
+  require('mychatgpt.quick-prompt').open(function(final_text)
+    M.open_new_chat()
+    M.chat:add_message({ lines = final_text, is_hidden = true })
+    M.chat:send()
+  end)
 end
 
 function M.replace_selection_with_last_code_block()
