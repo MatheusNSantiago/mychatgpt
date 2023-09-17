@@ -1,6 +1,5 @@
 local class = require('mychatgpt.shared.class')
 local Layout = require('nui.layout')
-local defaults = require('mychatgpt.utils').defaults
 local Input = require('mychatgpt.shared.input')
 local Split = require('nui.split')
 
@@ -12,7 +11,6 @@ local Ui = class('Ui')
 ---@class UiOptions
 ---@field on_submit_input fun(lines: string[])
 ---@field on_exit function faz algo quando a UI é fechada
----@field prompt_height? {min: number, max: number} (default {min = 5, max = 12})
 
 ---@param opts UiOptions
 function Ui:initialize(opts)
@@ -27,13 +25,10 @@ function Ui:initialize(opts)
     },
   })
 
-  self.prompt_lines = 1
-
-  ---@type {min: number, max: number}
-  self.prompt_height = defaults(opts.prompt_height, { min = 5, max = 12 })
   self.input = Input({
     on_submit = opts.on_submit_input,
-    on_change = function(lines) self:_update_input_height(lines) end,
+    on_number_of_lines_change = function() self:update_layout() end,
+    height_limit = 5,
     maps = {
       { 'n', '<C-l>', function() self.chat_window:focus() end, { desc = 'Focus on Chat' } },
       { 'n', '<C-j>', function() self:_focus_on_editor() end,  { desc = 'Focus on Editor' } },
@@ -92,14 +87,9 @@ function Ui:render_answer_delta(delta, state)
 end
 
 function Ui:get_layout_params()
-  local base_height = 2 + self.prompt_height.min -- esse 2 é o mínimo para o input (menos que 2 da erro)
-  local lines_over_min_height = math.max(0, self.prompt_lines - self.prompt_height.min)
-
-  local prompt_height = math.min(base_height + lines_over_min_height, self.prompt_height.max)
-
   local box = Layout.Box({
     Layout.Box(self.chat_window, { grow = 1 }),
-    Layout.Box(self.input, { size = { height = prompt_height } }),
+    Layout.Box(self.input, { size = { height = self.input:get_prompt_height() + 2 } }), -- +2 porque por algum motivo ele mostra -2 linhas
   }, { dir = 'col' })
 
   local config = {
@@ -136,15 +126,6 @@ function Ui:init_fake_buffer()
 end
 
 function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
-
-function Ui:_update_input_height(lines)
-  local has_number_of_lines_changed = self.prompt_lines ~= #lines
-
-  if has_number_of_lines_changed then
-    self.prompt_lines = #lines -- update prompt_lines
-    self:update_layout()
-  end
-end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
 ---@type Ui|Ui.constructor
