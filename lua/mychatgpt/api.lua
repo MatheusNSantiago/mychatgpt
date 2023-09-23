@@ -5,32 +5,30 @@ local utils = require('mychatgpt.utils')
 
 local Api = {}
 
--- API URL
--- Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
 Api.CHAT_COMPLETIONS_URL = 'https://api.openai.com/v1/chat/completions'
--- Api.EDITS_URL = 'https://api.openai.com/v1/edits'
 
-function Api.get_api_key()
-  local key = os.getenv('OPENAI_API_KEY')
+---@class ChatCompletionsOptions
+---@field chat_history {role: string, content: string}[]
+---@field on_done fun(answer: string[])
+---@field on_chunk? fun(delta: string[], state: string)
 
-  if key ~= nil and key ~= '' then key = key:gsub('%s+$', '') end
-
-  return key
-end
-
-function Api.chat_completions(messages, callback)
-  local payload = Api.make_payload({ messages = messages, is_stream = true })
+---@param opts ChatCompletionsOptions
+function Api.chat_completions(opts)
+  local payload = vim.tbl_extend('keep', {
+    messages = opts.chat_history,
+    stream = true,
+  }, Config.openai_params)
 
   local raw_chunks = ''
   local state = 'NOP'
 
-  Api.post({
+  Api._post({
     url = Api.CHAT_COMPLETIONS_URL,
     payload = payload,
     stream = {
       on_done = function()
-        local final_answer = utils.split_into_lines(raw_chunks)
-        callback(final_answer, 'END')
+        local answer = utils.split_into_lines(raw_chunks)
+        opts.on_done(answer)
       end,
       on_chunk = function(chunk)
         local response_ok = chunk
@@ -43,15 +41,18 @@ function Api.chat_completions(messages, callback)
           local delta = chunk.choices[1].delta.content
 
           raw_chunks = raw_chunks .. delta
-          delta = utils.split_into_lines(delta)
 
-          if state == 'NOP' then
-            state = 'START'
-            return callback(delta, state)
+          if opts.on_chunk then
+            delta = utils.split_into_lines(delta)
+
+            if state == 'NOP' then
+              state = 'START'
+              return opts.on_chunk(delta, state)
+            end
+
+            state = 'CONTINUE'
+            opts.on_chunk(delta, state)
           end
-
-          state = 'CONTINUE'
-          callback(delta, state)
         end
       end,
     },
@@ -64,14 +65,11 @@ end
 ---@field stream? {on_chunk: function, on_done: function}
 
 ---@param opts PostOptions
-function Api.post(opts)
-  local key = Api.get_api_key()
+function Api._post(opts)
+  local key = Api._get_api_key()
 
-  local res = curl.post(opts.url, {
-    headers = {
-      Authorization = 'Bearer ' .. key,
-      Content_Type = 'application/json',
-    },
+  curl.post(opts.url, {
+    headers = { Authorization = 'Bearer ' .. key, Content_Type = 'application/json' },
     raw = { '--silent', '--show-error', '--no-buffer' },
     body = vim.fn.json_encode(opts.payload),
     stream = function(_, data, _)
@@ -88,21 +86,14 @@ function Api.post(opts)
       end)
     end,
   })
-
-  if opts.stream == nil then
-    local json_response = vim.fn.json_decode(res.body)
-    return json_response
-  end
 end
 
-function Api.make_payload(opts)
-  local chat_history = {}
-  for _, message in ipairs(opts.messages) do
-    table.insert(chat_history, { role = message.role, content = message:get_text() })
-  end
+function Api._get_api_key()
+  local key = os.getenv('OPENAI_API_KEY')
 
-  local payload = vim.tbl_extend('keep', { messages = chat_history, stream = opts.is_stream }, Config.openai_params)
-  return payload
+  if key ~= nil and key ~= '' then key = key:gsub('%s+$', '') end
+
+  return key
 end
 
 return Api

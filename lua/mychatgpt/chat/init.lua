@@ -50,17 +50,14 @@ end
 --- Envia as mensagens para o servidor e renderiza a resposta
 --- como a API é stateless, é necessário enviar todas as mensagens
 function Chat:send()
-  Api.chat_completions(self.messages, function(answer, state)
-    if state == 'END' then
-      return self:add_message({
-        lines = answer,
-        role = 'assistant',
-      })
-    end
-
-    -- Ainda não terminou de responder
-    self.Ui:render_answer_delta(answer, state)
-  end)
+  Api.chat_completions({
+    chat_history = vim.tbl_map(
+      function(message) return { role = message.role, content = message:get_text() } end,
+      self.messages
+    ),
+    on_done = function(answer) self:add_message({ lines = answer, role = 'assistant' }) end,
+    on_chunk = function(delta, state) self.Ui:render_answer_delta(delta, state) end,
+  })
 end
 
 function Chat:set_prompt(lines)

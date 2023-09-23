@@ -1,6 +1,7 @@
 local class = require('mychatgpt.shared.class')
 local Layout = require('nui.layout')
 local Input = require('mychatgpt.shared.input')
+local defaults = require('mychatgpt.utils').defaults
 local Split = require('nui.split')
 
 local MessagesWidget = require('mychatgpt.chat.messages_widget')
@@ -10,11 +11,13 @@ local Ui = class('Ui')
 
 ---@class UiOptions
 ---@field on_submit_input fun(lines: string[])
----@field on_exit function faz algo quando a UI é fechada
+---@field on_exit? function faz algo quando a UI é fechada
 
 ---@param opts UiOptions
 function Ui:initialize(opts)
   self.editor_win = vim.api.nvim_get_current_win() -- salva o win atual pra voltar depois
+  self.on_exit = defaults(opts.on_exit, function() end)
+
   self.chat_window = MessagesWidget({
     title = ' Mochila de Criança ',
     maps = {
@@ -68,8 +71,7 @@ end
 ---@param delta string[]
 function Ui:render_answer_delta(delta, state)
   if state == 'START' then
-    -- Começa uma nova linha.
-    self.chat_window:set_lines(-1, -1, { '' })
+    self.chat_window:set_lines(-1, -1, { '' }) -- Começa uma nova linha.
   end
 
   for i, line in ipairs(delta) do
@@ -111,6 +113,7 @@ end
 function Ui:unmount()
   self.fake_buffer:unmount()
   self.layout:unmount()
+  self.on_exit()
 end
 
 ---Um hack para transformar a UI em um focusable buffer
