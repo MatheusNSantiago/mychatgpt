@@ -29,9 +29,9 @@ end
 
 function M.teste()
   require('mychatgpt.quick-prompt').open(function(final_text)
-    M.open_new_chat()
-    M.chat:add_message({ lines = final_text, is_hidden = true })
-    M.chat:send()
+    -- M.open_new_chat()
+    -- M.chat:add_message({ lines = final_text, is_hidden = true })
+    -- M.chat:send()
   end)
 end
 
