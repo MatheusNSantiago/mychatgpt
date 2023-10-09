@@ -10,18 +10,15 @@ local function reload()
 end
 
 vim.keymap.set('n', '<leader>a', function()
-  reload()
   mychatgpt.replace_selection_with_last_code_block()
   mychatgpt.selection:mark_with_sign()
 end)
 
 vim.keymap.set('n', '<leader>v', function()
-  reload()
   mychatgpt.open_new_chat()
 end)
 
 vim.keymap.set({ 'x', 'n' }, '<leader>k', function()
-  reload()
   mychatgpt.teste()
 end)
 
@@ -29,7 +26,6 @@ picker.create_picker({
   keymap = '<leader><leader>o',
   title = 'MyChatGPT',
   callback = function(messages, selection)
-    reload()
     if selection then
       mychatgpt.set_current_selection(selection)
       mychatgpt.selection:mark_with_sign()
