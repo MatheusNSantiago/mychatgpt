@@ -1,6 +1,6 @@
 local Selection = require('mychatgpt.selection')
 local utils = require('mychatgpt.utils')
-local options = require('mychatgpt.actions.options')
+local default_options = require('mychatgpt.actions.default_options')
 local Message = require('mychatgpt.message')
 
 local M = {}
@@ -25,7 +25,7 @@ function M.create_picker(opts)
 				.new(require('telescope.themes').get_dropdown({}), {
 					prompt_title = opts.title,
 					finder = require('telescope.finders').new_table({
-						results = vim.tbl_keys(options),
+						results = vim.tbl_keys(default_options),
 						entry_maker = entry_maker,
 					}),
 					sorter = require('telescope.sorters').get_generic_fuzzy_sorter(),
@@ -41,7 +41,7 @@ function M.create_picker(opts)
 							telescope_action.close(prompt_buffer_number) -- Closing the picker
 
 							if selection then
-								local messages = M.get_messages(option, selection)
+								local messages = M.get_preamble_messages_from_option(option, selection)
 
 								opts.callback(messages, selection) -- executa o callback
 							else
@@ -56,15 +56,15 @@ function M.create_picker(opts)
 end
 
 ---@return Message[]
-function M.get_messages(title, selection)
-	local item = options[title]
+function M.get_preamble_messages_from_option(option, selection)
+	local item = default_options[option]
 	local messages = {}
 
 	for _, message in ipairs(item.messages) do
 		local lines = M._render_template(message, item.variables, selection)
 		local role = message.role
 
-		table.insert(messages, Message.new({ role = role, lines = lines, is_hidden = false }))
+		table.insert(messages, Message({ role = role, lines = lines, is_hidden = true }))
 	end
 
 	return messages
