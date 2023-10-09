@@ -90,6 +90,11 @@ function Input:mount()
   vim.schedule(function() vim.cmd('startinsert!') end)
 end
 
+function Input:unmount()
+  Input.super.unmount(self)
+  self.on_close()
+end
+
 function Input:set_lines(lines) vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines) end
 
 function Input:scroll_to_bottom()

@@ -1,8 +1,9 @@
 local class = require('mychatgpt.shared.class')
 local M = {}
 
+---@alias Selection.constructor fun(opts: SelectionOptions): Selection
 ---@class Selection
-local Selection = class("Selection")
+local Selection = class('Selection')
 
 ---@class SelectionOptions
 ---@field lines string[]
@@ -59,7 +60,12 @@ function Selection:get_lines_with_line_number()
   return numbered_lines
 end
 
+---@return Selection | Selection.constructor | nil
 function M.get_selection()
+  local mode = vim.api.nvim_get_mode().mode
+  local has_visual_selection = mode == 'v' or mode == 'V' or mode == ''
+  if not has_visual_selection then return nil end
+
   local ESC_FEEDKEY = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
 
   vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', true)
@@ -72,13 +78,12 @@ function M.get_selection()
   local bufnr = vim.api.nvim_get_current_buf()
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
 
-  -- shorten first/last line according to start_col/end_col
+  -- Reduz a primeira/última linha de acordo com start_col/end_col.
   lines[#lines] = lines[#lines]:sub(1, end_col)
   lines[1] = lines[1]:sub(start_col)
 
-  ---@alias Selection.constructor fun(options: SelectionOptions): Selection
   ---@type Selection|Selection.constructor
-  local selection =  Selection({
+  local selection = Selection({
     lines = lines,
     start_line = start_line,
     end_line = end_line,
@@ -89,4 +94,5 @@ function M.get_selection()
 
   return selection
 end
+
 return M
