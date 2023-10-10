@@ -6,8 +6,8 @@ local M = {
 }
 
 function M.setup()
-  vim.api.nvim_set_hl(0, 'MyChatGPT_Question', { fg = '#b4befe', italic = true, bold = false, default = true })
-  vim.cmd('sign define mychatgpt_question_sign text=' .. '' .. ' texthl=MyCHATGPT_Question')
+  vim.api.nvim_set_hl(0, 'mychatgpt_question_hl', { fg = '#b4befe', italic = true, bold = false, default = true })
+  vim.cmd([[sign define mychatgpt_question_sign text= texthl=mychatgpt_question_hl]])
 
   vim.cmd([[sign define mychatgpt_action_block text=│ texthl=ErrorMsg]])
 end
