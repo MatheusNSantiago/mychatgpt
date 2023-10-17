@@ -1,13 +1,13 @@
 local picker = require('mychatgpt.actions.picker')
 local mychatgpt = require('mychatgpt')
 
-local function reload()
-  vim.cmd('wa')
-  vim.cmd('source plugin/mychatgpt.lua')
-  for k in pairs(package.loaded) do
-    if k:match('^mychatgpt') then package.loaded[k] = nil end
-  end
-end
+-- local function reload()
+--   vim.cmd('wa')
+--   vim.cmd('source plugin/mychatgpt.lua')
+--   for k in pairs(package.loaded) do
+--     if k:match('^mychatgpt') then package.loaded[k] = nil end
+--   end
+-- end
 
 vim.keymap.set('n', '<leader>a', function()
   mychatgpt.replace_selection_with_last_code_block()
