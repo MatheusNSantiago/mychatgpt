@@ -1,5 +1,6 @@
 return {
   openai_params = {
+    -- model = 'gpt-4',
     model = 'gpt-3.5-turbo',
     frequency_penalty = 0,
     presence_penalty = 0,

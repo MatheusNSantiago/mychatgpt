@@ -9,10 +9,10 @@ local mychatgpt = require('mychatgpt')
 --   end
 -- end
 
-vim.keymap.set('n', '<leader>a', function()
-  mychatgpt.replace_selection_with_last_code_block()
-  mychatgpt.selection:mark_with_sign()
-end)
+-- vim.keymap.set('n', '<leader>a', function()
+--   mychatgpt.replace_selection_with_last_code_block()
+--   mychatgpt.selection:mark_with_sign()
+-- end)
 
 vim.keymap.set('n', '<leader>v', function()
   mychatgpt.open_new_chat()
