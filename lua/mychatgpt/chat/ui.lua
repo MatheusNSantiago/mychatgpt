@@ -1,4 +1,5 @@
 local class = require('mychatgpt.shared.class')
+local U = require('mychatgpt.utils')
 local Layout = require('nui.layout')
 local Input = require('mychatgpt.shared.input')
 local defaults = require('mychatgpt.utils').defaults
@@ -41,6 +42,7 @@ function Ui:initialize(opts)
   })
 
   self.layout = Layout(self:get_layout_params())
+  self:_setup_autocommands()
 
   -- Antes de quitar de qualquer componente, da um unmount e retorna o foco pro editor
   local components = { self.chat_window, self.input }
@@ -129,6 +131,13 @@ function Ui:init_fake_buffer()
 end
 
 function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
+
+function Ui:_setup_autocommands()
+  U.augroup('mychatgpt', {
+    event = 'VimResized',
+    command = function() self.layout:update() end,
+  })
+end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
 ---@type Ui|Ui.constructor
