@@ -1,7 +1,6 @@
 local Input = require('mychatgpt.shared.input')
 local utils = require('mychatgpt.utils')
 local Selection = require('mychatgpt.selection')
-local Api = require('mychatgpt.api')
 local M = {}
 
 function M.open(callback)
@@ -34,13 +33,6 @@ function M.open(callback)
   })
 
   input:mount()
-end
-
-function M.fo()
-  Api.chat_completions({
-    chat_history = { { role = 'user', content = 'oi' } },
-    on_done = function(answer) vim.print(answer) end,
-  })
 end
 
 return M
