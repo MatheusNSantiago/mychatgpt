@@ -98,4 +98,63 @@ function M.augroup(name, ...)
   return id
 end
 
+--- Check the current window is the leftmost window
+function M.is_leftmost_window()
+  local winnr = vim.fn.winnr()
+  local winnr_left = vim.fn.winnr('l')
+
+  local is_leftmost = winnr == winnr_left
+  return is_leftmost
+end
+
+
+--- Guarda a keymap anterior
+function M.get_keymap(mode, keys)
+  local all_keymaps = vim.api.nvim_get_keymap(mode)
+  for _, map in ipairs(all_keymaps) do
+    if map.lhs == keys then
+      return map
+    end
+  end
+end
+
+function M.restore_keymap(tbl)
+  vim.keymap.set(tbl.mode, tbl.lhs, tbl.callback, {
+    desc= tbl.desc,
+    noremap = tbl.noremap,
+    silent = tbl.silent,
+  })
+end
+
+---@param content  any
+function M.log(content)
+    local txt = ''
+    local function recursive_log(obj, cnt)
+        cnt = cnt or 0
+        if type(obj) == 'table' then
+            txt = txt .. '\n' .. string.rep('\t', cnt) .. '{\n'
+            cnt = cnt + 1
+
+            for k, v in pairs(obj) do
+                if type(k) == 'string' then txt = txt .. string.rep('\t', cnt) .. '["' .. k .. '"]' .. ' = ' end
+                if type(k) == 'number' then txt = txt .. string.rep('\t', cnt) .. '[' .. k .. ']' .. ' = ' end
+
+                recursive_log(v, cnt)
+                txt = txt .. ',\n'
+            end
+
+            cnt = cnt - 1
+            txt = txt .. string.rep('\t', cnt) .. '}'
+        elseif type(obj) == 'string' then
+            txt = txt .. string.format('%q', obj)
+        else
+            txt = txt .. tostring(obj)
+        end
+    end
+    recursive_log(content)
+
+    vim.api.nvim_echo({ { txt } }, false, {})
+end
+
+
 return M
