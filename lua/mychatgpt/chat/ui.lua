@@ -2,8 +2,6 @@ local class = require('mychatgpt.shared.class')
 local U = require('mychatgpt.utils')
 local Layout = require('nui.layout')
 local Input = require('mychatgpt.shared.input')
-local defaults = require('mychatgpt.utils').defaults
-local Split = require('nui.split')
 
 local MessagesWidget = require('mychatgpt.chat.messages_widget')
 
@@ -17,7 +15,11 @@ local Ui = class('Ui')
 ---@param opts UiOptions
 function Ui:initialize(opts)
   self.editor_win = vim.api.nvim_get_current_win() -- salva o win atual pra voltar depois
-  self.on_exit = defaults(opts.on_exit, function() end)
+  self.on_exit = function()
+    U.restore_keymap(self.prior_wincmd_keymap)
+
+    if opts.on_exit then opts.on_exit() end
+  end
 
   self.chat_window = MessagesWidget({
     title = ' Mochila de Criança ',
@@ -43,6 +45,7 @@ function Ui:initialize(opts)
 
   self.layout = Layout(self:get_layout_params())
   self:_setup_autocommands()
+  self:_override_default_wincmd()
 
   -- Antes de quitar de qualquer componente, da um unmount e retorna o foco pro editor
   local components = { self.chat_window, self.input }
@@ -108,26 +111,12 @@ end
 function Ui:update_layout() self.layout:update(self:get_layout_params()) end
 
 function Ui:mount()
-  self.fake_buffer = self:init_fake_buffer()
   self.layout:mount()
 end
 
 function Ui:unmount()
-  self.fake_buffer:unmount()
   self.layout:unmount()
   self.on_exit()
-end
-
----Um hack para transformar a UI em um focusable buffer
----Isso é pq o Input e o Popup não tem como focar
-function Ui:init_fake_buffer()
-  local split = Split({ position = 'right', size = '1%' }) -- menor tamanho possível
-  split:mount()
-
-  -- Focou no buffer? -> Foca no input
-  split:on('BufEnter', function() self.input:focus() end)
-
-  return split
 end
 
 function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
@@ -137,6 +126,19 @@ function Ui:_setup_autocommands()
     event = 'VimResized',
     command = function() self.layout:update() end,
   })
+end
+
+---Faz com que o outline seja a última janela da direita
+function Ui:_override_default_wincmd()
+  local wincmd_left = '<M-C-A>'
+  self.prior_wincmd_keymap = U.get_keymap('n', wincmd_left)
+
+  vim.keymap.set('n', wincmd_left, function()
+    if U.is_leftmost_window() then
+      return self.input:focus()
+    end
+    vim.cmd('wincmd l')
+  end)
 end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
