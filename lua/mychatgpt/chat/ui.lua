@@ -10,11 +10,12 @@ local Ui = class('Ui')
 
 ---@class UiOptions
 ---@field on_submit_input fun(lines: string[])
+---@field editor_win number
 ---@field on_exit? function faz algo quando a UI é fechada
 
 ---@param opts UiOptions
 function Ui:initialize(opts)
-  self.editor_win = vim.api.nvim_get_current_win() -- salva o win atual pra voltar depois
+  self.editor_win = opts.editor_win
   self.on_exit = function()
     U.restore_keymap(self.prior_wincmd_keymap)
 
@@ -130,7 +131,7 @@ end
 
 ---Faz com que o outline seja a última janela da direita
 function Ui:_override_default_wincmd()
-  local wincmd_left = '<M-C-A>'
+  local wincmd_left = '<C-ç>'
   self.prior_wincmd_keymap = U.get_keymap('n', wincmd_left)
 
   vim.keymap.set('n', wincmd_left, function()
@@ -138,7 +139,7 @@ function Ui:_override_default_wincmd()
       return self.input:focus()
     end
     vim.cmd('wincmd l')
-  end)
+  end, {buffer = true})
 end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
