@@ -51,7 +51,6 @@ function M.concat_lists(...)
   return result
 end
 
-
 ---@class AutocmdArgs
 ---@field id number autocmd ID
 ---@field event string
@@ -107,20 +106,17 @@ function M.is_leftmost_window()
   return is_leftmost
 end
 
-
 --- Guarda a keymap anterior
 function M.get_keymap(mode, keys)
   local all_keymaps = vim.api.nvim_get_keymap(mode)
   for _, map in ipairs(all_keymaps) do
-    if map.lhs == keys then
-      return map
-    end
+    if map.lhs == keys then return map end
   end
 end
 
 function M.restore_keymap(tbl)
   vim.keymap.set(tbl.mode, tbl.lhs, tbl.callback, {
-    desc= tbl.desc,
+    desc = tbl.desc,
     noremap = tbl.noremap,
     silent = tbl.silent,
   })
@@ -128,33 +124,35 @@ end
 
 ---@param content  any
 function M.log(content)
-    local txt = ''
-    local function recursive_log(obj, cnt)
-        cnt = cnt or 0
-        if type(obj) == 'table' then
-            txt = txt .. '\n' .. string.rep('\t', cnt) .. '{\n'
-            cnt = cnt + 1
+  local txt = ''
+  local function recursive_log(obj, cnt)
+    cnt = cnt or 0
+    if type(obj) == 'table' then
+      txt = txt .. '\n' .. string.rep('\t', cnt) .. '{\n'
+      cnt = cnt + 1
 
-            for k, v in pairs(obj) do
-                if type(k) == 'string' then txt = txt .. string.rep('\t', cnt) .. '["' .. k .. '"]' .. ' = ' end
-                if type(k) == 'number' then txt = txt .. string.rep('\t', cnt) .. '[' .. k .. ']' .. ' = ' end
+      for k, v in pairs(obj) do
+        if type(k) == 'string' then txt = txt .. string.rep('\t', cnt) .. '["' .. k .. '"]' .. ' = ' end
+        if type(k) == 'number' then txt = txt .. string.rep('\t', cnt) .. '[' .. k .. ']' .. ' = ' end
 
-                recursive_log(v, cnt)
-                txt = txt .. ',\n'
-            end
+        recursive_log(v, cnt)
+        txt = txt .. ',\n'
+      end
 
-            cnt = cnt - 1
-            txt = txt .. string.rep('\t', cnt) .. '}'
-        elseif type(obj) == 'string' then
-            txt = txt .. string.format('%q', obj)
-        else
-            txt = txt .. tostring(obj)
-        end
+      cnt = cnt - 1
+      txt = txt .. string.rep('\t', cnt) .. '}'
+    elseif type(obj) == 'string' then
+      txt = txt .. string.format('%q', obj)
+    else
+      txt = txt .. tostring(obj)
     end
-    recursive_log(content)
+  end
+  recursive_log(content)
 
-    vim.api.nvim_echo({ { txt } }, false, {})
+  vim.api.nvim_echo({ { txt } }, false, {})
 end
 
+---@return boolean: True if running on WSL, false otherwise.
+function M.is_wsl() return vim.fn.system('grep microsoft /proc/version'):len() > 0 end
 
 return M

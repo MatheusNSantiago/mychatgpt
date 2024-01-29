@@ -111,9 +111,7 @@ end
 
 function Ui:update_layout() self.layout:update(self:get_layout_params()) end
 
-function Ui:mount()
-  self.layout:mount()
-end
+function Ui:mount() self.layout:mount() end
 
 function Ui:unmount()
   self.layout:unmount()
@@ -131,15 +129,13 @@ end
 
 ---Faz com que o outline seja a última janela da direita
 function Ui:_override_default_wincmd()
-  local wincmd_left = '<C-ç>'
+  local wincmd_left = U.is_wsl() and '<C-A-a>' or '<C-ç>'
   self.prior_wincmd_keymap = U.get_keymap('n', wincmd_left)
 
   vim.keymap.set('n', wincmd_left, function()
-    if U.is_leftmost_window() then
-      return self.input:focus()
-    end
+    if U.is_leftmost_window() then return self.input:focus() end
     vim.cmd('wincmd l')
-  end, {buffer = true})
+  end, { buffer = true })
 end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
