@@ -14,13 +14,9 @@ local mychatgpt = require('mychatgpt')
 --   mychatgpt.selection:mark_with_sign()
 -- end)
 
-vim.keymap.set('n', '<leader>v', function()
-  mychatgpt.open_new_chat()
-end)
+vim.keymap.set('n', '<leader>v', mychatgpt.open_new_chat)
 
-vim.keymap.set({ 'x', 'n' }, '<leader>k', function()
-  mychatgpt.teste()
-end)
+vim.keymap.set({ 'x', 'n' }, '<leader>k', mychatgpt.quick_prompt)
 
 picker.create_picker({
   keymap = '<leader><leader>o',

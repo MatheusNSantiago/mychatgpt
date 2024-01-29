@@ -118,7 +118,12 @@ function Ui:unmount()
   self.on_exit()
 end
 
-function Ui:_focus_on_editor() vim.api.nvim_set_current_win(self.editor_win) end
+function Ui:_focus_on_editor()
+  for _ = 1, 3 do
+    vim.cmd('wincmd w')
+    if self.editor_win == vim.api.nvim_get_current_win() then break end
+  end
+end
 
 function Ui:_setup_autocommands()
   U.augroup('mychatgpt', {
