@@ -13,7 +13,7 @@ local Chat = class('Chat')
 ---@param opts ChatOptions
 function Chat:initialize(opts)
   self.messages = {}
-  self.on_exit = function() end
+
   self.Ui = Ui({
     editor_win = vim.api.nvim_get_current_win(),
     on_submit_input = function(lines)

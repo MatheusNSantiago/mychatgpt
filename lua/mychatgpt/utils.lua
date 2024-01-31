@@ -115,6 +115,8 @@ function M.get_keymap(mode, keys)
 end
 
 function M.restore_keymap(tbl)
+  if not tbl then return end
+
   vim.keymap.set(tbl.mode, tbl.lhs, tbl.callback, {
     desc = tbl.desc,
     noremap = tbl.noremap,
