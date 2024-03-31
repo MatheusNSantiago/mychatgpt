@@ -66,7 +66,6 @@ function Input:init(opts)
   self:_setup_keymaps()
 
   self.prompt = {}
-  self.cursor_before = vim.api.nvim_win_get_cursor(0)
 end
 
 function Input:mount()
@@ -129,13 +128,9 @@ function Input:get_prompt_height(prompt)
 end
 
 function Input:update_size()
-  local row, col = unpack(self.cursor_before)
-
   self:update_layout({
-    relative = {
-      type = 'buf',
-      position = { row = row - 1, col = col },
-    },
+    relative = { type = 'win' },
+    position = { row = 0, col = 0 },
     anchor = 'NW',
     size = { width = self.width_limit.min, height = self:get_prompt_height() },
   })
