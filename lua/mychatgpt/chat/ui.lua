@@ -66,12 +66,14 @@ function Ui:render_message(message)
 
   if message.role == 'assistant' then
     self.chat_window:set_lines(start_line - 1, -1, { '' }) -- apaga a mensagem parcial
-  else
-    self.chat_window:set_sign('mychatgpt_question_sign', start_line)
   end
 
   -- mostra a mensagem pronta
   self.chat_window:set_lines(start_line, end_line, lines)
+
+  -- Coloca o icone na frente 󰚩 |
+  local sign = message.role == 'user' and 'mychatgpt_question_sign' or 'mychatgpt_answer_sign'
+  self.chat_window:set_sign(sign, start_line)
 end
 
 ---@param delta string[]
@@ -135,12 +137,12 @@ end
 ---Faz com que o outline seja a última janela da direita
 function Ui:_override_default_wincmd()
   local wincmd_left = U.is_wsl() and '<C-A-a>' or '<C-ç>'
-  self.prior_wincmd_keymap = U.get_keymap('n', wincmd_left)
+  self.prior_wincmd_keymap = U.get_keymap(wincmd_left)
 
   vim.keymap.set('n', wincmd_left, function()
     if U.is_leftmost_window() then return self.input:focus() end
     vim.cmd('wincmd l')
-  end, { buffer = true })
+  end, { buffer = false })
 end
 
 ---@alias Ui.constructor fun(options: UiOptions): Ui
