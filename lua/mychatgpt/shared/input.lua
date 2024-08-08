@@ -87,6 +87,9 @@ function Input:mount()
   })
 
   vim.schedule(function() vim.cmd('startinsert!') end)
+
+  -- Desabilitar nvim-cmp no buffer
+  require('cmp').setup.buffer({ enabled = false })
 end
 
 function Input:unmount()
