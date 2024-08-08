@@ -12,24 +12,21 @@ local MessagesWidget = Popup:extend('MessageWidget')
 function MessagesWidget:init(opts)
   self.maps = opts.maps or {}
 
-  MessagesWidget.super.init(
-    self,
-    {
-      zindex = 50,
-      border = {
-        highlight = 'FloatBorder',
-        style = 'rounded',
-        text = { top = opts.title },
-      },
-      win_options = {
-        wrap = true,
-        linebreak = true,
-        foldcolumn = '1',
-        winhighlight = 'Normal:Normal,FloatBorder:FloatBorder',
-      },
-      buf_options = { filetype = 'markdown' },
-    }
-  )
+  MessagesWidget.super.init(self, {
+    zindex = 50,
+    border = {
+      highlight = 'FloatBorder',
+      style = 'rounded',
+      text = { top = opts.title },
+    },
+    win_options = {
+      wrap = true,
+      linebreak = true,
+      foldcolumn = '1',
+      winhighlight = 'Normal:Normal,FloatBorder:FloatBorder',
+    },
+    buf_options = { filetype = 'markdown' },
+  })
   self:_setup_keymaps()
 end
 
@@ -52,9 +49,9 @@ function MessagesWidget:set_sign(sign_name, start_line)
 end
 
 function MessagesWidget:set_lines(start_idx, end_idx, lines)
-  vim.api.nvim_buf_set_option(self.bufnr, 'modifiable', true)
+  vim.bo[self.bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(self.bufnr, start_idx, end_idx, false, lines)
-  vim.api.nvim_buf_set_option(self.bufnr, 'modifiable', false)
+  vim.bo[self.bufnr].modifiable = false
 end
 
 function MessagesWidget:highlight_line(hl_group, line_idx, col_start, col_end)

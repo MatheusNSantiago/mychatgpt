@@ -107,9 +107,10 @@ function M.is_leftmost_window()
 end
 
 --- Guarda a keymap anterior
-function M.get_keymap(mode, keys)
-  local all_keymaps = vim.api.nvim_get_keymap(mode)
+function M.get_keymap( keys)
+  local all_keymaps = vim.api.nvim_get_keymap('n')
   for _, map in ipairs(all_keymaps) do
+    ---@diagnostic disable-next-line: undefined-field
     if map.lhs == keys then return map end
   end
 end
