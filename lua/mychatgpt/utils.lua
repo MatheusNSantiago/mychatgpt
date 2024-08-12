@@ -2,7 +2,7 @@ local M = {}
 
 function M.get_buf_filetype()
   local bufnr = vim.api.nvim_get_current_buf()
-  return vim.api.nvim_buf_get_option(bufnr, 'filetype')
+  return vim.bo[bufnr].filetype
 end
 
 --- Quebra a mensagem em linhas
@@ -34,6 +34,7 @@ function M.get_line_diagnostics()
       ---@type string
       message = diagnostic.message,
       ---@type integer
+      ---@diagnostic disable-next-line: assign-type-mismatch
       severity = vim.diagnostic.severity[diagnostic.severity],
     })
   end
@@ -107,7 +108,7 @@ function M.is_leftmost_window()
 end
 
 --- Guarda a keymap anterior
-function M.get_keymap( keys)
+function M.get_keymap(keys)
   local all_keymaps = vim.api.nvim_get_keymap('n')
   for _, map in ipairs(all_keymaps) do
     ---@diagnostic disable-next-line: undefined-field

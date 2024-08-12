@@ -5,10 +5,10 @@ local M = {}
 
 function M.open(callback)
   local selection = Selection.get_selection()
-  local input
 
   if selection then selection:mark_with_sign() end
 
+  local input
   input = Input({
     label = 'Prompt',
     relative = 'cursor',
